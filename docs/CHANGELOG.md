@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [4.1.0] - 2026-04-02
+
+### Added
+- **Phase 0 Configuration Task** - Runtime configuration before other work begins
+  - Output location configuration (default: `~/playbooks/<playbook-name>/`)
+  - External data source permissions with explicit item-by-item consent
+  - Batch options for external sources ("none", "all", or specific selections)
+  - Configuration section in `scope.md` documenting all decisions
+- **CCC-CONFIG Cross-Cutting Concern** - Path configuration compliance
+  - Ensures all file operations use configured paths from Phase 0
+  - No hardcoded external paths allowed
+- **Context Preservation Rules for Configuration** - Configuration decisions always loaded
+  - If `scope.md` missing configuration section, halt and request Phase 0 completion
+
+### Fixed
+- **FM-026 Severity** - Changed from invalid "critical" to valid "degraded"
+- **Failure Mode References** - Added FM references to Phases 1, 5, 13, 14
+- **Phase 5 & 15 Compilation Blocks** - Added missing `behavioral_profile`, `tools_available`, `success_criteria`
+- **CCC-CONFIG Phase Format** - Changed from string `"Phase 0"` to numeric `[0]`
+- **Metrics References** - Added MET-07 to Phase 12 gate, MET-08 to Phase 15 gate
+- **Phase 0 Summary** - Updated to mention configuration establishment
+
+### Changed
+- **External Data Source Consent UX** - Improved from item-by-item to batch options
+  - List all sources upfront with numbered labels
+  - Single question with options: "none", "all", or specific selections
+  - More efficient workflow for users who want to skip all sources
+
 ## [3.1.0] - 2026-03-31
 
 ### Added

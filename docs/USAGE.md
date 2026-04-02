@@ -136,6 +136,23 @@ about purpose, target users, scope boundaries, success criteria, and constraints
 Classify your domain's complexity (simple, standard, or complex) across three
 dimensions: process, knowledge, and roles.
 
+**New in v4.1:** The first task in Phase 0 is now **configuration** — establishing
+runtime settings before any other work begins:
+
+1. **Output location**: Where your playbook will be saved
+   - Default: `~/playbooks/<playbook-name>/`
+   - If directory exists, creates `~/playbooks/<playbook-name>-v2/` (or next available)
+   - Specify custom path if needed
+
+2. **External data permissions**: Which sources can be accessed
+   - The AI lists available sources with numbered labels
+   - You can respond: `"none"` (skip all), `"all"` (include all), or specific selections
+   - Examples: `"1 and 3"`, `"all except 2"`, `"just the knowledge base"`
+   - Only sources you explicitly approve will be accessed
+
+All configuration decisions are recorded in `scope.md` for reference throughout
+the project.
+
 **What you produce:**
 
 | File | Content |
