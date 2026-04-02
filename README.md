@@ -8,6 +8,9 @@ Meta-playbook for creating domain-specific playbooks. Works with single-agent sy
 - `templates/output-schema.json` - Schema for validating produced playbooks
 - `templates/role-mapping.json` - Reference for @handle to [Role] transformation
 - `scripts/compilation/` - Compilation block utilities for agent configuration
+- `scripts/generate_scaffold.py` - Generate a valid skeleton playbook JSON
+- `scripts/show_handoff.py` - Show what files to load between sessions
+- `USAGE.md` - Comprehensive usage guide for end users
 
 ## Usage
 
@@ -21,7 +24,7 @@ Meta-playbook for creating domain-specific playbooks. Works with single-agent sy
 |-------|-------------|
 | Single-agent | One person/AI fills all roles, switches mindset per phase |
 | Multi-agent | Each role maps to different person/agent |
-| AI-assisted | Human = Approver/Coordinator, AI = Researcher/Implementer/Architect |
+| AI-assisted | Human = Stakeholder/Coordinator, AI = Researcher/Builder/Architect |
 
 ## Compilation Block
 
@@ -97,14 +100,14 @@ Validation includes:
 
 ## Roles
 
-| Role | Responsibility |
-|------|----------------|
-| Coordinator | Phase gates, tracking, status updates, blocker escalation |
-| Researcher | Domain research, best practices, SME knowledge, competitive analysis |
-| Architect | Phase structure, task granularity, role design, dependency mapping |
-| Builder | Task titles/descriptions, JSON assembly, validation, fixes |
-| Auditor | Quality review, scenario walkthroughs, gap analysis, stress testing |
-| Stakeholder | Purpose, scope, constraints, success criteria, final approval |
+| Role | Responsibility | Primary Phases |
+|------|----------------|----------------|
+| Coordinator | Phase gates, tracking, status updates, blocker escalation | Every gate |
+| Researcher | Domain research, best practices, SME knowledge, competitive analysis | 1 |
+| Architect | Phase structure, task granularity, role design, dependency mapping | 2, 4-8 |
+| Builder | Task titles/descriptions, JSON assembly, validation, fixes | 3, 6-10 |
+| Auditor | Quality review, scenario walkthroughs, gap analysis, stress testing | 11-12 |
+| Stakeholder | Purpose, scope, constraints, success criteria, final approval | 0, 13 |
 
 ## Phases (17)
 
@@ -140,3 +143,9 @@ Before using the produced playbook:
 - [ ] All roles used in tasks are defined in roles{}
 - [ ] metrics section complete
 - [ ] usage_instructions includes execution models
+
+## Development History
+
+The `docs/development-history/` directory contains archived design specs and
+implementation plans from the original development. These are not required to
+use the playbook — see the README in that directory for details.
