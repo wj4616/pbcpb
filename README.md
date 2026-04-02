@@ -135,7 +135,7 @@ Quality standards that apply across multiple phases:
 - CCC-04: Deliverable Tracking
 - CCC-05: Context Preservation
 - CCC-06: Gate Verification
-- CCC-CONFIG: Path Configuration Compliance
+- CCC-07: Path Configuration Compliance
 
 ## Troubleshooting
 
