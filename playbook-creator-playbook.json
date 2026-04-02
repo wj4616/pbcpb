@@ -2898,7 +2898,9 @@
       "decisions-ledger.md and artifact-manifest.md are always included in context_load \u2014 exempt from token optimization cuts",
       "metrics-tracker.md is included in context_load only for phases whose gates collect metrics",
       "At session breaks, verify all three files are saved and current before ending",
-      "If context compaction occurs mid-session, these files serve as ground truth for recovering state"
+      "If context compaction occurs mid-session, these files serve as ground truth for recovering state",
+      "Configuration decisions (output location, external data sources) from scope.md are ALWAYS loaded in context",
+      "If scope.md is missing configuration section, halt and request Phase 0 completion"
     ]
   }
 }
