@@ -2132,10 +2132,11 @@
               "Scenario walkthrough details \u2014 issues extracted and fixed",
               "Pre-fix JSON draft \u2014 superseded by v0.2"
             ],
-            "context_update": {
-              "decisions-ledger.md": "append",
-              "artifact-manifest.md": "update",
-              "metrics-tracker.md": "update"
+            "metrics_snapshot": {
+              "collect": [
+                "MET-07"
+              ],
+              "record_in": "metrics-tracker.md"
             }
           }
         }
@@ -2496,7 +2497,13 @@
             "excluded_files": [
               "Improvement cycle details \u2014 captured in decisions-ledger.md"
             ],
-            "skill_validation": "none"
+            "skill_validation": "none",
+            "metrics_snapshot": {
+              "collect": [
+                "MET-08"
+              ],
+              "record_in": "metrics-tracker.md"
+            }
           }
         }
       ]
@@ -2875,7 +2882,7 @@
       "fix": "Use the phase_summary field as a navigation index. Re-read each phase's checklist from the JSON before executing it. The Phase 0 inventory task ensures all phases are acknowledged before work begins.",
       "prevention": "Phase 0 gate requires phase inventory acknowledgment (all 16 phases listed in decisions-ledger.md). Context management guidance in usage_instructions directs re-reading per phase.",
       "phase": "Phase 0: Commission & Scoping",
-      "severity": "critical",
+      "severity": "degraded",
       "source": "pbcpb-trial-1-audit-2026-04"
     }
   ],
