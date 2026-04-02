@@ -2,31 +2,32 @@
   "description": "Mapping from Mattermost @handles to role placeholders for single-agent systems",
   "role_mapping": {
     "@minion": "[Coordinator]",
-    "@isaac": "[Approver]",
+    "@isaac": "[Stakeholder]",
     "@piper": "[Researcher]",
-    "@forge": "[Implementer]",
+    "@forge": "[Builder]",
     "@lux": "[Architect]",
-    "@kira": "[Reviewer]",
+    "@kira": "[Auditor]",
     "@axiom": "[Auditor]"
   },
   "role_definitions": {
-    "Coordinator": "Tracking progress, enforcing phase gates, maintaining status, ensuring completion",
-    "Approver": "Business decisions, strategic direction, final approval, stakeholder alignment",
-    "Researcher": "Domain research, best practices, requirements synthesis, competitive analysis",
-    "Implementer": "Writing tasks, assembling JSON, making fixes, building deliverables",
-    "Architect": "Phase structure, dependency mapping, templates, system design",
-    "Reviewer": "Quality audit, gap analysis, stress testing, consistency checks",
-    "Auditor": "Competitive analysis, external benchmarking, cross-cutting concerns"
+    "Coordinator": "Phase gates, tracking, status updates, blocker escalation, decisions ledger and artifact manifest maintenance",
+    "Stakeholder": "Purpose, scope, constraints, success criteria, business decisions, final approval",
+    "Researcher": "Domain research, best practices, SME knowledge, competitive analysis",
+    "Builder": "Task titles/descriptions, JSON assembly, validation, implementation of fixes",
+    "Architect": "Phase structure, task granularity, role design, dependency mapping, template design",
+    "Auditor": "Quality review, scenario walkthroughs, gap analysis, stress testing, failure mode cataloging"
   },
   "execution_models": {
     "single_agent": {
-      "description": "One person or AI session fills all roles",
+      "description": "One person or AI session fills all roles, switching mindset per phase",
       "mindset_phases": {
-        "0-1": "Researcher mindset - gather, synthesize, document",
-        "2-3": "Architect mindset - structure, design, map",
-        "4-6": "Implementer mindset - write, assemble, define",
-        "7-9": "Reviewer mindset - audit, test, validate",
-        "10-11": "Coordinator/Approver mindset - align, approve, ship"
+        "0": "Stakeholder mindset - scope, decide, constrain",
+        "1-3": "Researcher/Architect mindset - gather, synthesize, design KB",
+        "4-8": "Architect/Builder mindset - structure, engineer, assemble",
+        "9-10": "Builder mindset - assemble JSON, validate consistency",
+        "11-12": "Auditor mindset - audit, stress test, find gaps",
+        "13": "Stakeholder mindset - review, iterate, approve",
+        "14-16": "Coordinator mindset - pilot, document, improve"
       }
     },
     "multi_agent": {
@@ -34,10 +35,10 @@
       "note": "Assign roles at playbook start, track ownership throughout"
     },
     "ai_assisted": {
-      "description": "Human fills Approver and Coordinator; AI fills Researcher, Implementer, Architect",
-      "human_roles": ["Approver", "Coordinator"],
-      "ai_roles": ["Researcher", "Implementer", "Architect"],
-      "shared_roles": ["Reviewer"]
+      "description": "Human fills Stakeholder and Coordinator; AI fills Researcher, Builder, Architect",
+      "human_roles": ["Stakeholder", "Coordinator"],
+      "ai_roles": ["Researcher", "Builder", "Architect"],
+      "shared_roles": ["Auditor"]
     }
   }
 }

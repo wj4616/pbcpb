@@ -95,19 +95,18 @@ Validation includes:
 - Priority file references exist in context_load
 - Model/temperature/budget ranges
 
-## Role Mapping
+## Roles
 
-| Original | New Role |
-|----------|----------|
-| @minion | [Coordinator] |
-| @isaac | [Approver] |
-| @piper | [Researcher] |
-| @forge | [Implementer] |
-| @lux | [Architect] |
-| @kira | [Reviewer] |
-| @axiom | [Auditor] |
+| Role | Responsibility |
+|------|----------------|
+| Coordinator | Phase gates, tracking, status updates, blocker escalation |
+| Researcher | Domain research, best practices, SME knowledge, competitive analysis |
+| Architect | Phase structure, task granularity, role design, dependency mapping |
+| Builder | Task titles/descriptions, JSON assembly, validation, fixes |
+| Auditor | Quality review, scenario walkthroughs, gap analysis, stress testing |
+| Stakeholder | Purpose, scope, constraints, success criteria, final approval |
 
-## Phases
+## Phases (17)
 
 | Phase | Purpose |
 |-------|---------|
@@ -129,25 +128,15 @@ Validation includes:
 | 15 | Documentation & Version Control |
 | 16 | Continuous Improvement |
 
-## Key Differences from Original Mattermost Playbook
-
-- Removed Mattermost-specific fields (channel_name_template, message_on_join, reminder_timer_default_seconds)
-- Replaced @handles with [Role] placeholders for single-agent compatibility
-- Added pilot alternatives for single-agent execution (Solo, AI Adversarial, Peer Review)
-- Added cross_cutting_concerns section with integration guidance
-- Added deliverables section for outputs per phase
-- Added explicit phase gates with conditions and blocker_examples
-- Added role_execution_guidance for single-agent, multi-agent, and AI-assisted workflows
-
 ## Self-Review Checklist
 
 Before using the produced playbook:
 
-- [ ] All JSON files validate without errors
-- [ ] No @handle references remain (all transformed to [Role])
-- [ ] All 12 phases (0-11) present with full task content
-- [ ] Each phase has gate object with conditions and blocker_examples
-- [ ] deliverables section defines outputs per phase
-- [ ] cross_cutting_concerns documented
+- [ ] All JSON files validate without errors (`python3 scripts/validate_playbook.py`)
+- [ ] Semantic checks pass (`python3 scripts/validate_semantic.py`)
+- [ ] All 17 phases (0-16) present with full task content
+- [ ] Each phase has compilation block and gate with conditions
+- [ ] Handoff chain is continuous (each phase's context_load matches prior phase's output)
+- [ ] All roles used in tasks are defined in roles{}
 - [ ] metrics section complete
-- [ ] usage_instructions includes all three execution models
+- [ ] usage_instructions includes execution models
