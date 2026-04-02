@@ -228,7 +228,7 @@
       "enforcement_rule": "Every phase that reads external files must reference paths from scope.md configuration section.",
       "minimum_phases": 1,
       "phases_applied": [
-        "Phase 0"
+        0
       ]
     }
   ],
@@ -429,7 +429,7 @@
           "scope has in/out/adjacent lists",
           "constraints documented"
         ],
-        "failure_modes_relevant": [],
+        "failure_modes_relevant": ["FM-001", "FM-015"],
         "agent_config": {
           "temperature": 0.5
         },
@@ -1054,7 +1054,7 @@
           "dependencies mapped",
           "every phase has a gate"
         ],
-        "failure_modes_relevant": [],
+        "failure_modes_relevant": ["FM-003"],
         "agent_config": {},
         "system_prompt_auto": {
           "role_definition": true,
@@ -1077,7 +1077,24 @@
             "artifact-manifest.md": 2
           }
         },
-        "skill_preparation": "none"
+        "skill_preparation": "none",
+        "success_criteria": [
+          "All roles defined with clear responsibilities and decision authority",
+          "Role names use consistent bracket syntax [RoleName]",
+          "Handoff points documented for all role transitions",
+          "Escalation paths defined for blocker types"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "decision_recording"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "low",
+          "creativity_level": "conservative",
+          "verbosity": "concise",
+          "stance": "neutral"
+        }
       },
       "items": [
         {
@@ -2142,7 +2159,7 @@
           "all CRITICAL/HIGH/MEDIUM issues fixed",
           "JSON re-validated"
         ],
-        "failure_modes_relevant": [],
+        "failure_modes_relevant": ["FM-021", "FM-024"],
         "agent_config": {},
         "system_prompt_auto": {
           "role_definition": true,
@@ -2272,7 +2289,7 @@
           "Auditor verification passed",
           "final/playbook-v1.0.json exists"
         ],
-        "failure_modes_relevant": [],
+        "failure_modes_relevant": ["FM-019"],
         "agent_config": {},
         "system_prompt_auto": {
           "role_definition": true,
@@ -2414,7 +2431,25 @@
             "artifact-manifest.md": 2
           }
         },
-        "skill_preparation": "none"
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Run review data collected and documented",
+          "New failure modes cataloged with proper FM-IDs",
+          "Stakeholder decision on updates recorded in decisions-ledger.md",
+          "If updates approved: changes implemented and JSON re-validated"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_editing",
+          "json_validation",
+          "decision_recording"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "low",
+          "creativity_level": "conservative",
+          "verbosity": "concise",
+          "stance": "neutral"
+        }
       },
       "items": [
         {
