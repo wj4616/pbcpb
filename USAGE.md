@@ -55,7 +55,7 @@ Three concepts make up the entire system: **phases**, **roles**, and **gates**.
 
 ### Phases
 
-The playbook creator has 17 phases, numbered 0 through 16. You work through them
+The playbook creator has 16 phases, numbered 0 through 15. You work through them
 in order. Each phase has:
 
 - A **purpose** — what this phase accomplishes
@@ -63,15 +63,15 @@ in order. Each phase has:
 - A **gate** — conditions that must all pass before you move to the next phase
 
 You don't need to memorize the phases. The AI reads them and tells you what to do.
-For orientation, the 17 phases group into five stages:
+For orientation, the 16 phases group into five stages:
 
 | Stage | Phases | What Happens |
 |-------|--------|-------------|
 | Scoping | 0 | Define what you're building, for whom, and why |
 | Research & KB | 1-3 | Research your domain, design a knowledge base, populate it |
 | Architecture & Engineering | 4-8 | Design phases, roles, tasks, outputs, and metrics for your playbook |
-| Assembly & Validation | 9-12 | Build the JSON file, validate it, audit for gaps, stress test |
-| Review & Launch | 13-16 | Stakeholder review, pilot dry-run, documentation, improvement plan |
+| Assembly & Validation | 9-12 | Build the JSON file, validate it, audit for gaps, stress test and dry-run |
+| Review & Launch | 13-15 | Stakeholder review, documentation, improvement plan |
 
 *These five stages are navigational groupings to help you track where you are —
 they don't appear in the system itself.*
@@ -110,7 +110,7 @@ across phases.
 
 ### Tracking Files
 
-Three files persist across all 17 phases. The AI creates them in Phase 0 and
+Three files persist across all 16 phases. The AI creates them in Phase 0 and
 updates them at every gate:
 
 | File | Purpose |
@@ -228,51 +228,47 @@ continuous? Does every phase have a gate?
 **Phase 11 — Gap Analysis:** Audit the playbook for missing requirements, cross-cutting
 concern gaps, phase coverage holes, contradictions, and failure modes.
 
-**Phase 12 — Stress Testing:** Walk through the playbook as if you were running it.
-Test scenarios: happy path, domain novice, knowledge base construction, blockers,
-edge cases, and multi-session continuity. Catalog any failure modes discovered.
+**Phase 12 — Stress Testing & Dry-Run:** Define a scenario matrix and walk through
+the playbook under each scenario. Test happy path, domain novice, KB construction,
+blockers, edge cases. Verify conditional logic and trace handoff chains. Document
+friction and catalog failure modes. Fix all issues and produce `drafts/playbook-v0.2.json`.
 
 **What you produce:**
 
 | Phase | Key Outputs |
 |-------|------------|
 | 9 | `drafts/playbook-v0.1.json` |
-| 10 | `drafts/playbook-v0.1.json` (validated and fixed) |
-| 11 | `audits/requirements-gap-analysis.md`, `audits/cross-cutting-audit.md`, `audits/phase-gap-analysis.md`, `audits/contradiction-audit.md`, and others (see phase tasks for full list) |
-| 12 | `testing/scenario-happy-path.md`, `testing/scenario-domain-novice.md`, `testing/scenario-blockers.md`, `drafts/playbook-v0.2.json`, and others (see phase tasks for full list) |
+| 10 | `validation-results.md`, `drafts/playbook-v0.1.json` (validated and fixed) |
+| 11 | `audits/comprehensive-audit.md`, `audits/fix-list.md` |
+| 12 | `testing/scenario-matrix.md`, `testing/scenario-walkthroughs.md`, `testing/handoff-chain-trace.md`, `drafts/playbook-v0.2.json` |
 
 **Done when:** Validation scripts pass with zero errors. Gap analysis surfaces no
 critical issues. All stress test scenarios complete without unresolvable blockers.
 
-### Stage 5: Review & Launch (Phases 13-16)
+### Stage 5: Review & Launch (Phases 13-15)
 
-Final polish, testing, and documentation.
+Final polish and documentation.
 
 **Phase 13 — Stakeholder Review:** Step back and review the playbook as if you
 were the person who commissioned it. Does it meet the success criteria from Phase 0?
 Iterate until satisfied. This is a human decision point — take a break from the AI
-if needed.
+if needed. Produces `final/playbook-v1.0.json`.
 
-**Phase 14 — Pilot Dry-Run:** Run through the playbook as if it were real.
-Build a scenario matrix, trace every handoff chain, identify friction points,
-and apply fixes. Produce the final `playbook-v1.0.json`.
-
-**Phase 15 — Documentation:** Write a CHANGELOG, a QUICKSTART guide for users
+**Phase 14 — Documentation:** Write a CHANGELOG, a QUICKSTART guide for users
 of your playbook, and a metrics report summarizing the creation process.
 
-**Phase 16 — Continuous Improvement:** Define the improvement process for your
+**Phase 15 — Continuous Improvement:** Define the improvement process for your
 playbook. How will future feedback be collected? How will updates be applied?
 
 **What you produce:**
 
 | Phase | Key Outputs |
 |-------|------------|
-| 13 | `stakeholder-feedback.md`, `drafts/playbook-v{latest}.json` |
-| 14 | `final/playbook-v1.0.json`, `testing/scenario-matrix.md`, `testing/handoff-chain-trace.md`, `testing/pilot-friction.md`, `audits/final-verification.md` |
-| 15 | `final/CHANGELOG.md`, `final/QUICKSTART.md`, `final/metrics-report.md` |
-| 16 | Updated `decisions-ledger.md` and `artifact-manifest.md` |
+| 13 | `stakeholder-feedback.md`, `final/playbook-v1.0.json` |
+| 14 | `final/CHANGELOG.md`, `final/QUICKSTART.md`, `final/metrics-report.md` |
+| 15 | Updated `decisions-ledger.md` and `artifact-manifest.md` |
 
-**Done when:** Stakeholder approves. Pilot dry-run passes. Documentation complete.
+**Done when:** Stakeholder approves. Documentation complete.
 `final/playbook-v1.0.json` validates cleanly. You have a playbook.
 
 ---
@@ -281,7 +277,7 @@ playbook. How will future feedback be collected? How will updates be applied?
 
 ### Session Strategy
 
-The 17 phases don't fit in one AI conversation. Split them across sessions using
+The 16 phases don't fit in one AI conversation. Split them across sessions using
 this recommended grouping:
 
 | Session | Phases | Focus |
@@ -292,11 +288,10 @@ this recommended grouping:
 | 4 | 5-6 | Role + task engineering |
 | 5 | 7-8 | Output config + metrics |
 | 6 | 9 | JSON assembly (heavy context) |
-| 7 | 10 | Validation (fresh eyes) |
-| 8 | 11-12 | Audit pair (gap analysis + stress testing) |
+| 7 | 10-11 | Validation + gap analysis |
+| 8 | 12 | Stress testing + dry-run |
 | 9 | 13 | Stakeholder review (human break) |
-| 10 | 14 | Pilot dry-run |
-| 11 | 15-16 | Documentation + improvement |
+| 10 | 14-15 | Documentation + improvement |
 
 ### Starting a New Session
 
@@ -481,7 +476,7 @@ this — you can't pass a gate for work you haven't done.
 | Term | Definition |
 |------|-----------|
 | **Playbook** | A JSON file containing phases, tasks, roles, gates, and metadata that guides a process from start to finish |
-| **Phase** | One of 17 sequential stages in the creation process (numbered 0-16), each with tasks and a gate |
+| **Phase** | One of 16 sequential stages in the creation process (numbered 0-15), each with tasks and a gate |
 | **Gate** | A checkpoint at the end of a phase with explicit pass/fail conditions; nothing advances until all conditions pass |
 | **Role** | A functional mindset (Stakeholder, Researcher, Architect, Builder, Auditor, Coordinator) adopted per phase — not a separate person |
 | **Task** | A specific piece of work within a phase, prefixed with `[Role]` to indicate who owns it |

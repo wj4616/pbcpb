@@ -4,7 +4,7 @@ Meta-playbook for creating domain-specific playbooks. Works with single-agent sy
 
 ## Files
 
-- `playbook-creator-playbook.json` - The main playbook creator (17 phases)
+- `playbook-creator-playbook.json` - The main playbook creator (16 phases)
 - `templates/output-schema.json` - Schema for validating produced playbooks
 - `templates/role-mapping.json` - Reference for @handle to [Role] transformation
 - `scripts/compilation/` - Compilation block utilities for agent configuration
@@ -106,10 +106,10 @@ Validation includes:
 | Researcher | Domain research, best practices, SME knowledge, competitive analysis | 1 |
 | Architect | Phase structure, task granularity, role design, dependency mapping | 2, 4-8 |
 | Builder | Task titles/descriptions, JSON assembly, validation, fixes | 3, 6-10 |
-| Auditor | Quality review, scenario walkthroughs, gap analysis, stress testing | 11-12 |
+| Auditor | Quality review, scenario walkthroughs, gap analysis, stress testing | 10-12 |
 | Stakeholder | Purpose, scope, constraints, success criteria, final approval | 0, 13 |
 
-## Phases (17)
+## Phases (16)
 
 | Phase | Purpose |
 |-------|---------|
@@ -125,11 +125,10 @@ Validation includes:
 | 9 | JSON Assembly |
 | 10 | JSON Validation & Consistency |
 | 11 | Quality Audit — Gap Analysis |
-| 12 | Quality Audit — Stress Testing |
+| 12 | Stress Testing & Structured Dry-Run |
 | 13 | Stakeholder Review & Iteration |
-| 14 | Pilot / Structured Dry-Run |
-| 15 | Documentation & Version Control |
-| 16 | Continuous Improvement |
+| 14 | Documentation & Version Control |
+| 15 | Continuous Improvement |
 
 ## Self-Review Checklist
 
@@ -137,7 +136,7 @@ Before using the produced playbook:
 
 - [ ] All JSON files validate without errors (`python3 scripts/validate_playbook.py`)
 - [ ] Semantic checks pass (`python3 scripts/validate_semantic.py`)
-- [ ] All 17 phases (0-16) present with full task content
+- [ ] All 16 phases (0-15) present with full task content
 - [ ] Each phase has compilation block and gate with conditions
 - [ ] Handoff chain is continuous (each phase's context_load matches prior phase's output)
 - [ ] All roles used in tasks are defined in roles{}
