@@ -3,7 +3,7 @@
   "version": 4,
   "description": "Meta-playbook for creating domain-specific playbooks. Produces structured JSON playbooks through 16 phases of research, KB construction and bootstrapping, architecture, task engineering, assembly, validation, and structured dry-run. Works with single-agent systems where one agent fills multiple functional roles; output playbooks may optionally use role-based-multi-agent with per-role agent_assignment.",
   "phase_summary": [
-    "Phase 0: Commission & Scoping — Define purpose, scope, constraints, complexity profile. Agent must acknowledge all 16 phases.",
+    "Phase 0: Commission & Scoping — Establish configuration (output location, external data permissions), define purpose, scope, constraints, complexity profile. Agent must acknowledge all 16 phases.",
     "Phase 1: Domain Research — Research domain, best practices, SME knowledge, competitive landscape.",
     "Phase 2: KB Architecture — Design knowledge base layers, schemas, bridge mappings, population strategy.",
     "Phase 3: KB Bootstrapping — Create directory tree, seed entries, harvest research content, validate schema conformance.",
