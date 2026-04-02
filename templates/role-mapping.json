@@ -1,0 +1,43 @@
+{
+  "description": "Mapping from Mattermost @handles to role placeholders for single-agent systems",
+  "role_mapping": {
+    "@minion": "[Coordinator]",
+    "@isaac": "[Approver]",
+    "@piper": "[Researcher]",
+    "@forge": "[Implementer]",
+    "@lux": "[Architect]",
+    "@kira": "[Reviewer]",
+    "@axiom": "[Auditor]"
+  },
+  "role_definitions": {
+    "Coordinator": "Tracking progress, enforcing phase gates, maintaining status, ensuring completion",
+    "Approver": "Business decisions, strategic direction, final approval, stakeholder alignment",
+    "Researcher": "Domain research, best practices, requirements synthesis, competitive analysis",
+    "Implementer": "Writing tasks, assembling JSON, making fixes, building deliverables",
+    "Architect": "Phase structure, dependency mapping, templates, system design",
+    "Reviewer": "Quality audit, gap analysis, stress testing, consistency checks",
+    "Auditor": "Competitive analysis, external benchmarking, cross-cutting concerns"
+  },
+  "execution_models": {
+    "single_agent": {
+      "description": "One person or AI session fills all roles",
+      "mindset_phases": {
+        "0-1": "Researcher mindset - gather, synthesize, document",
+        "2-3": "Architect mindset - structure, design, map",
+        "4-6": "Implementer mindset - write, assemble, define",
+        "7-9": "Reviewer mindset - audit, test, validate",
+        "10-11": "Coordinator/Approver mindset - align, approve, ship"
+      }
+    },
+    "multi_agent": {
+      "description": "Each role maps to a different agent or person",
+      "note": "Assign roles at playbook start, track ownership throughout"
+    },
+    "ai_assisted": {
+      "description": "Human fills Approver and Coordinator; AI fills Researcher, Implementer, Architect",
+      "human_roles": ["Approver", "Coordinator"],
+      "ai_roles": ["Researcher", "Implementer", "Architect"],
+      "shared_roles": ["Reviewer"]
+    }
+  }
+}

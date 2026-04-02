@@ -1,0 +1,3036 @@
+{
+  "title": "Playbook Creator Playbook",
+  "version": 3,
+  "description": "Meta-playbook for creating domain-specific playbooks. Produces structured JSON playbooks through 17 phases of research, KB construction and bootstrapping, architecture, task engineering, assembly, validation, and structured dry-run. Works with single-agent systems where one agent fills multiple functional roles; output playbooks may optionally use role-based-multi-agent with per-role agent_assignment.",
+  "workflow_model": "role-based-single-agent",
+  "defaults": {
+    "model": "opus",
+    "model_fallbacks": {
+      "opus": [
+        "sonnet",
+        "haiku"
+      ],
+      "sonnet": [
+        "haiku"
+      ]
+    },
+    "context_budget_tokens": 64000,
+    "system_prompt_budget": 2000,
+    "critical_priority_threshold": 3,
+    "temperature": 0.3,
+    "max_tokens": 4096
+  },
+  "roles": {
+    "Coordinator": {
+      "description": "Phase gates, tracking, status updates, blocker escalation, decisions ledger and artifact manifest maintenance",
+      "role_context": "Track progress systematically. Verify conditions before advancing. Maintain decisions-ledger and artifact-manifest at every gate.",
+      "defaults": {
+        "model": "sonnet",
+        "temperature": [
+          0.2,
+          0.4
+        ]
+      },
+      "agent_assignment": "single"
+    },
+    "Researcher": {
+      "description": "Domain research, best practices, SME knowledge, competitive analysis",
+      "role_context": "Gather broadly, synthesize precisely. Cite sources. Distinguish facts from opinions. Flag gaps in knowledge.",
+      "defaults": {
+        "model": "sonnet",
+        "temperature": [
+          0.4,
+          0.7
+        ]
+      },
+      "agent_assignment": "single"
+    },
+    "Architect": {
+      "description": "Phase structure, task granularity, role design, dependency mapping, template design",
+      "role_context": "Design for clarity and separation. Every boundary must be justified. Every dependency must be explicit. Favor simplicity.",
+      "defaults": {
+        "model": "opus",
+        "temperature": [
+          0.3,
+          0.5
+        ]
+      },
+      "agent_assignment": "single"
+    },
+    "Builder": {
+      "description": "Task titles/descriptions, JSON assembly, validation, implementation of fixes",
+      "role_context": "Mechanical precision. Follow specifications exactly. Verify output matches input requirements. No creative interpretation during assembly.",
+      "defaults": {
+        "model": "sonnet",
+        "temperature": [
+          0.2,
+          0.4
+        ]
+      },
+      "agent_assignment": "single"
+    },
+    "Auditor": {
+      "description": "Quality review, scenario walkthroughs, gap analysis, stress testing, failure mode cataloging, contamination testing, final verification before handoff",
+      "role_context": "Binary yes/no judgments, no hedging. Find what is broken. Review with fresh eyes. Do not defend previous work.",
+      "defaults": {
+        "model": "opus",
+        "temperature": [
+          0.2,
+          0.3
+        ]
+      },
+      "agent_assignment": "single"
+    },
+    "Stakeholder": {
+      "description": "Purpose, scope, constraints, success criteria, business decisions, final approval",
+      "role_context": "Business alignment. Does this serve the commission? Are constraints respected? Would you trust this playbook to run unsupervised?",
+      "defaults": {
+        "model": "sonnet",
+        "temperature": [
+          0.3,
+          0.5
+        ]
+      },
+      "agent_assignment": "single"
+    }
+  },
+  "scope": {
+    "in_scope": [
+      "Creating domain-specific playbook JSON files",
+      "Knowledge base architecture specification",
+      "Knowledge base bootstrapping (directory creation, placeholder seeding, initial harvesting)",
+      "Quality audit and stress testing",
+      "Structured dry-run validation with scenario matrix",
+      "Failure mode cataloging across runs"
+    ],
+    "out_of_scope": [
+      "Executing the produced playbook (that is the user's responsibility)",
+      "Full KB curation and ongoing maintenance (the creator bootstraps the KB with placeholders and initial harvesting; full curation is the user's responsibility)",
+      "Platform-specific deployment or hosting",
+      "Multi-agent orchestration of the creation process itself (the creator runs as single-agent; output playbooks may use role-based-multi-agent with per-role agent_assignment)"
+    ],
+    "adjacent": [
+      "Skills/prompting frameworks that may be activated per-phase",
+      "Knowledge bases built from the produced KB specification",
+      "CI/CD or version control for produced playbooks"
+    ]
+  },
+  "cross_cutting_concerns": [
+    {
+      "id": "CCC-01",
+      "title": "Quality Standard",
+      "description": "Every produced playbook must be comprehensive enough that any team can execute it without ambiguity. Every task must have an owner. Every non-obvious task must have a description. Every phase must have a gate with explicit conditions. No placeholder content.",
+      "enforcement_method": "checklist_items",
+      "enforcement_rule": "Embed as a verification checklist item in task descriptions where this concern applies. The item must be a concrete yes/no check, not a restatement of the concern.",
+      "minimum_phases": 3,
+      "phases_applied": [
+        6,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "id": "CCC-02",
+      "title": "Role Consistency",
+      "description": "Roles defined at playbook start must be used consistently throughout all tasks. Every task title must start with [Role]. Roles cannot appear fewer than 3 times (orphaned) or reference undefined roles.",
+      "enforcement_method": "gate_condition",
+      "enforcement_rule": "Include role consistency verification as an explicit gate condition at phases where tasks are written or assembled.",
+      "minimum_phases": 3,
+      "phases_applied": [
+        5,
+        6,
+        9,
+        10
+      ]
+    },
+    {
+      "id": "CCC-03",
+      "title": "Gate Enforcement",
+      "description": "Phase gates are firewall points — nothing advances until all conditions are met. Each gate must list explicit conditions, blocker examples, and handoff blocks. Conditions must be verifiable, not subjective.",
+      "enforcement_method": "compilation_precheck",
+      "enforcement_rule": "Include gate completeness as a pre_check condition in compilation blocks for phases that define or validate gates.",
+      "minimum_phases": 3,
+      "phases_applied": [
+        4,
+        6,
+        9,
+        10
+      ]
+    },
+    {
+      "id": "CCC-04",
+      "title": "Deliverable Tracking",
+      "description": "Every task that produces output must name the file path. The artifact manifest tracks all files across all phases. Later phases reference earlier deliverables through handoff chains.",
+      "enforcement_method": "task_description",
+      "enforcement_rule": "Every task that produces a deliverable must have an 'output' field with the exact file path. The artifact-manifest.md must be updated at every gate.",
+      "minimum_phases": 3,
+      "phases_applied": [
+        0,
+        6,
+        9,
+        15
+      ]
+    },
+    {
+      "id": "CCC-05",
+      "title": "Context Preservation",
+      "description": "decisions-ledger.md, artifact-manifest.md, and metrics-tracker.md are persistent tracking files. decisions-ledger and artifact-manifest are loaded in every phase and updated at every gate. No decision rationale is silently lost across session boundaries.",
+      "enforcement_method": "compilation_precheck",
+      "enforcement_rule": "Verify decisions-ledger.md and artifact-manifest.md appear in every phase's context_load (except Phase 0). Verify both are updated at every gate.",
+      "minimum_phases": 3,
+      "phases_applied": [
+        0,
+        6,
+        9,
+        10
+      ]
+    }
+  ],
+  "knowledge_base": {
+    "complexity": "flat",
+    "layers": [],
+    "entry_schema": {
+      "_note": "The creator itself uses no structured KB. Output playbooks define their own KB architecture in Phase 2."
+    },
+    "bridge_schema": {},
+    "population_strategy": {
+      "placeholder_seeding": "N/A — the creator has no KB to seed",
+      "harvesting_sources": [],
+      "curation_rules": "N/A",
+      "sync_rules": "N/A",
+      "versioning_protocol": "N/A"
+    },
+    "directory_structure": "Project folder: README.md, research/, architecture/, drafts/, audits/, testing/, final/"
+  },
+  "checklists": [
+    {
+      "title": "Phase 0: Commission & Scoping",
+      "purpose": "Define exactly what playbook is being built, for whom, and under what constraints. Nothing else starts until this is locked.",
+      "compilation": {
+        "context_load": [
+          "commission brief from user — the initial request describing what playbook to build"
+        ],
+        "role_mindset": "Stakeholder — this phase is about decisions, not research or building",
+        "objective": "Lock purpose, scope, constraints, and success criteria so every subsequent phase has a fixed target",
+        "pre_check": [
+          "User has provided a commission brief or verbal description of the playbook they want"
+        ],
+        "failure_modes_relevant": [
+          "FM-015"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "commission brief from user — the initial request describing what playbook to build": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Purpose statement is one unambiguous paragraph",
+          "Scope has explicit in/out/adjacent lists",
+          "Success criteria are measurable, not subjective",
+          "Strategic constraints documented",
+          "Complexity profile documented"
+        ],
+        "tools_available": [
+          "file_creation",
+          "file_reading",
+          "user_questioning",
+          "decision_recording"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "conservative",
+          "verbosity": "concise",
+          "stance": "supportive"
+        }
+      },
+      "items": [
+        {
+          "title": "[Coordinator] — Create project knowledge base folder",
+          "owner": "[Coordinator]",
+          "description": "Folder structure: README.md, research/, architecture/, drafts/, audits/, testing/, final/\n\nInitialize decisions-ledger.md — empty, with header: '# Decisions Ledger — append at every phase gate'\n\nInitialize artifact-manifest.md — empty, with header: '# Artifact Manifest — update at every phase gate' and columns: File | Phase | Status | Summary\n\nInitialize metrics-tracker.md — empty, with header: '# Metrics Tracker — record at every phase gate' and columns: Metric | Phase | Value | Target | Date",
+          "output": "README.md, project folder structure, decisions-ledger.md, artifact-manifest.md, metrics-tracker.md"
+        },
+        {
+          "title": "[Stakeholder] — Define the playbook's purpose and problem statement",
+          "owner": "[Stakeholder]",
+          "description": "Answer precisely:\n- What process does this playbook automate/guide?\n- What problem does it solve? What goes wrong without it?\n- Is this new, an optimization of existing, or a variant?\n\nOne paragraph, no ambiguity.",
+          "output": "README.md (purpose statement and project overview)"
+        },
+        {
+          "title": "[Stakeholder] — Define target users and team composition",
+          "owner": "[Stakeholder]",
+          "description": "Who will RUN this playbook?\n- Team size, roles, skill levels\n- What tools/access do they have?\n\nThe playbook's detail level is calibrated to the least experienced person who will use it."
+        },
+        {
+          "title": "[Stakeholder] — Define scope boundaries",
+          "owner": "[Stakeholder]",
+          "description": "IN SCOPE: what this playbook covers\nOUT OF SCOPE: what it does NOT cover\nADJACENT: what it connects to but doesn't own\n\nScope creep is the #1 killer of playbook quality.",
+          "output": "scope.md"
+        },
+        {
+          "title": "[Stakeholder] — Define success criteria for the playbook itself",
+          "owner": "[Stakeholder]",
+          "description": "Measurable criteria (e.g., 'an unfamiliar user can execute it without clarifying questions')\nQuality bar (e.g., 'every task has an owner, description, and exit criteria')\nPilot test pass/fail criteria",
+          "output": "success-criteria.md"
+        },
+        {
+          "title": "[Stakeholder] — Define strategic constraints",
+          "owner": "[Stakeholder]",
+          "description": "Technology constraints, methodology constraints, budget/resource constraints, timeline constraints, compliance/legal constraints.\n\nThese become universal rules that every phase must respect.",
+          "output": "constraints.md"
+        },
+        {
+          "title": "[Stakeholder] — Identify related existing playbooks",
+          "owner": "[Stakeholder]",
+          "description": "Playbooks covering overlapping territory, upstream/downstream dependencies, reference/inspiration sources.\n\nIf replacing an existing playbook, that playbook becomes input for Phase 1 audit."
+        },
+        {
+          "title": "[Stakeholder] — Classify domain complexity",
+          "owner": "[Stakeholder]",
+          "description": "Answer three questions to set complexity guardrails for the creation process:\n\n1. PROCESS COMPLEXITY: How many distinct phases does the real-world process have?\n   - Simple (1-4 phases): single-skill workflow, linear steps\n   - Standard (5-10 phases): multi-skill workflow, some parallelism\n   - Complex (11+ phases): multi-discipline workflow, significant dependencies\n\n2. KNOWLEDGE COMPLEXITY: How many distinct types of knowledge does the domain require?\n   - Flat (1 type): single reference layer, no translation needed\n   - Layered (2-3 types): multiple knowledge domains, some cross-referencing\n   - Bridged (4+ types): distinct vocabularies that need translation between them\n\n3. ROLE COMPLEXITY: How many distinct functional roles does the process need?\n   - Minimal (2 roles): one doer, one approver\n   - Standard (3-4 roles): specialized functions with handoffs\n   - Full (5+ roles): distinct disciplines with complex handoff chains\n\nRecord the complexity_profile in decisions-ledger.md:\n  process: simple|standard|complex\n  knowledge: flat|layered|bridged\n  roles: minimal|standard|full\n  overall: highest of the three dimensions\n\nThe overall classification sets advisory guardrails (not hard limits) for the rest of the creation process."
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Purpose defined, scope locked, constraints documented, success criteria measurable, knowledge base initialized",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "Purpose statement is one paragraph with no ambiguity",
+            "Scope has explicit in/out/adjacent lists",
+            "Success criteria are measurable, not subjective",
+            "Strategic constraints documented",
+            "Project knowledge base folder created",
+            "decisions-ledger.md, artifact-manifest.md, and metrics-tracker.md initialized",
+            "Complexity profile documented in decisions-ledger.md (process, knowledge, roles, overall)"
+          ],
+          "blocker_examples": [
+            "Purpose statement says 'improve the process' without specifying which process or what improvement looks like — too vague, rewrite",
+            "Scope has no out-of-scope list — everything is implicitly in scope, which means scope creep is guaranteed",
+            "Success criteria say 'playbook is good' — not measurable, define what 'good' means quantitatively"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "README.md",
+              "scope.md",
+              "constraints.md",
+              "success-criteria.md",
+              "decisions-ledger.md",
+              "artifact-manifest.md",
+              "metrics-tracker.md"
+            ],
+            "next_phase_context": [
+              "README.md (full)",
+              "scope.md",
+              "constraints.md"
+            ],
+            "excluded_files": [
+              "Conversation about why scope decisions were made — resolved, captured in scope.md and decisions-ledger.md"
+            ],
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 1: Domain Research & Process Discovery",
+      "purpose": "Understand the domain deeply enough to build a playbook for it. Research produces flat documents that Phase 2 will structure.",
+      "compilation": {
+        "context_load": [
+          "README.md",
+          "scope.md",
+          "constraints.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Researcher — gather, synthesize, document. Breadth over depth at this stage.",
+        "objective": "Produce comprehensive flat research documents covering domain processes, best practices, competitors, cross-cutting concerns, and platform specifics",
+        "pre_check": [
+          "Purpose statement is unambiguous",
+          "scope has in/out/adjacent lists",
+          "constraints documented"
+        ],
+        "failure_modes_relevant": [],
+        "agent_config": {
+          "temperature": 0.5
+        },
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "README.md": 5,
+            "scope.md": 2,
+            "constraints.md": 3,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Domain analysis covers standard processes, failure modes, and terminology",
+          "Best practices documented with sources",
+          "Cross-cutting concerns identified with justification",
+          "Requirements document synthesizes all research"
+        ],
+        "tools_available": [
+          "web_search",
+          "web_fetch",
+          "file_creation",
+          "file_reading",
+          "user_questioning"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "moderate",
+          "creativity_level": "exploratory",
+          "verbosity": "detailed",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Researcher] — Research the domain this playbook serves",
+          "owner": "[Researcher]",
+          "description": "Standard processes in this industry/discipline, common failure modes, regulatory/compliance requirements, standard tools and platforms, terminology glossary, KPIs professionals track.",
+          "output": "research/domain-analysis.md"
+        },
+        {
+          "title": "[Researcher] — Research industry best practices and standards",
+          "owner": "[Researcher]",
+          "description": "Published standards (ISO, industry frameworks), expert recommendations (books, courses, authoritative sources), common process frameworks, typical phase structures, common pitfalls and how experts avoid them.",
+          "output": "research/best-practices.md"
+        },
+        {
+          "title": "[Researcher] — Competitive playbook/template audit",
+          "owner": "[Researcher]",
+          "description": "Existing playbooks, templates, SOPs, checklists covering similar territory. For each: what it covers, what it does well, what it misses, structure, detail level.",
+          "output": "research/competitive-templates.md"
+        },
+        {
+          "title": "[Researcher] — Audit existing playbook(s) being replaced",
+          "owner": "[Researcher]",
+          "conditional": "Only if replacing an existing playbook",
+          "description": "What the existing playbook does well (KEEP), what it does poorly (FIX), what it's missing (ADD), what contradicts current strategy (REMOVE).",
+          "output": "audits/existing-playbook-audit.md"
+        },
+        {
+          "title": "[Stakeholder] — Gather process knowledge from subject matter experts",
+          "owner": "[Stakeholder]",
+          "description": "The actual process (not documented — the real one), steps that aren't written down, common blockers and resolutions, decisions requiring judgment vs always-the-same, what they wish they'd known before their first time.",
+          "output": "research/sme-interviews.md"
+        },
+        {
+          "title": "[Researcher] — Identify cross-cutting concerns",
+          "owner": "[Researcher]",
+          "description": "Concerns that touch every phase, not just one. Technology/platform concerns affecting all phases. Compliance concerns applying to every task. Quality standards verified at every phase. Strategic constraints shaping every decision.\n\nCross-cutting concerns must be woven throughout the playbook, not isolated in one phase.",
+          "output": "research/cross-cutting-concerns.md"
+        },
+        {
+          "title": "[Researcher] — Identify platform/environment-specific concerns",
+          "owner": "[Researcher]",
+          "description": "If the playbook involves a specific platform or environment: how does data/content get stored, what are the safe modification methods, what should NEVER be done (anti-patterns), what platform-specific tools exist, what deployment/migration procedures apply.",
+          "output": "research/platform-concerns.md"
+        },
+        {
+          "title": "[Coordinator] — Synthesize research into requirements document",
+          "owner": "[Coordinator]",
+          "description": "Domain requirements (what the process must accomplish), quality requirements (standards and compliance), strategic requirements (business constraints from Phase 0), platform requirements (technical constraints), cross-cutting requirements, user requirements (what the target team needs to succeed).",
+          "output": "research/requirements.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Domain researched, requirements synthesized",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "Domain analysis covers standard processes, failure modes, and terminology",
+            "Best practices documented with sources",
+            "Competitive templates audited with strengths/weaknesses",
+            "Cross-cutting concerns identified with justification",
+            "Requirements document synthesizes all research"
+          ],
+          "blocker_examples": [
+            "Domain analysis missing key compliance requirements — research more",
+            "No SME input gathered — interview at least one expert before proceeding",
+            "Requirements document has 'TBD' sections — complete before proceeding"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "research/domain-analysis.md",
+              "research/best-practices.md",
+              "research/competitive-templates.md",
+              "research/cross-cutting-concerns.md",
+              "research/platform-concerns.md",
+              "research/sme-interviews.md",
+              "research/requirements.md",
+              "audits/existing-playbook-audit.md (if applicable)"
+            ],
+            "next_phase_context": [
+              "research/requirements.md (full)",
+              "research/cross-cutting-concerns.md (full)",
+              "research/domain-analysis.md (full — needed for KB layer classification)",
+              "scope.md",
+              "constraints.md"
+            ],
+            "excluded_files": [
+              "SME interview transcripts — synthesized into requirements",
+              "Rejected competitive templates — audit captured what matters",
+              "best-practices.md and platform-concerns.md — key points captured in requirements.md"
+            ],
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 2: KB Architecture",
+      "purpose": "Convert flat research into a structured, queryable knowledge specification. This phase produces a KB ARCHITECTURE (blueprint), not the KB itself. The actual KB gets built when the output playbook is executed.",
+      "compilation": {
+        "context_load": [
+          "research/requirements.md",
+          "research/cross-cutting-concerns.md",
+          "research/domain-analysis.md",
+          "scope.md",
+          "constraints.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Architect — structuring knowledge, not gathering it. Classify, separate, define schemas.",
+        "objective": "Produce a KB architecture blueprint (layers, schemas, bridge, population strategy) that an agent can build from without ambiguity",
+        "pre_check": [
+          "Domain analysis exists with distinct knowledge types identified",
+          "requirements synthesized",
+          "cross-cutting concerns documented"
+        ],
+        "failure_modes_relevant": [
+          "FM-001",
+          "FM-014"
+        ],
+        "agent_config": {
+          "temperature": 0.5
+        },
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "research/requirements.md": 5,
+            "research/cross-cutting-concerns.md": 5,
+            "research/domain-analysis.md": 5,
+            "scope.md": 5,
+            "constraints.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "KB complexity decision documented with clear rationale",
+          "If multi-layer: every knowledge type assigned to exactly one layer with separation rules",
+          "Entry schema defined with all required fields and an example entry",
+          "Population strategy defined with sources, quality criteria, and curation rules",
+          "Directory tree specified with exact file naming conventions"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "file_editing",
+          "user_questioning"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "moderate",
+          "creativity_level": "moderate",
+          "verbosity": "comprehensive",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Architect] — Determine KB complexity level",
+          "owner": "[Architect]",
+          "description": "Decision question: 'Do users of this playbook describe goals in language that differs from implementation language?'\n  YES → structured KB with bridge layer needed (e.g., audio: 'warm' → filter cutoff 0.2-0.4)\n  NO → assess if domain has enough distinct knowledge types to warrant layers\n\nDecision question: 'Does this domain have enough distinct knowledge types to justify separate layers?'\n  YES → multi-layer KB (define layers)\n  NO → flat reference (single folder of markdown files with table of contents)\n\nThe minimal path is genuinely minimal: single reference layer, no bridge, no cross-references, flat file list. A folder of markdown with a TOC. That is the floor."
+        },
+        {
+          "title": "[Architect] — Define knowledge layers",
+          "owner": "[Architect]",
+          "conditional": "Only if multi-layer KB was chosen in Task 1",
+          "description": "For each layer: name and domain boundary (what belongs here and what doesn't), authority score (0.0-1.0), separation rule (why this can't merge with another layer), topics within the layer.\n\nSeparation principle: knowledge that changes independently lives in separate layers.",
+          "output": "kb-architecture.md"
+        },
+        {
+          "title": "[Architect] — Define KB entry schema",
+          "owner": "[Architect]",
+          "description": "Exact JSON structure every entry must follow.\n\nRequired fields: id ({kb-name}_{topic}_{entry-name}), kb (which layer), topic, status (placeholder|harvested|curated|synced), version (semver), title, summary, description, source, concepts (array of {name, description, related[]}), code_blocks (array of {language, code, preserved} — if domain involves code), tags, related_topics, difficulty (beginner|intermediate|advanced), domain_relevance (1-10).\n\nAdditional domain-specific fields defined here.",
+          "output": "entry-schema.json"
+        },
+        {
+          "title": "[Architect] — Define bridge entry schema",
+          "owner": "[Architect]",
+          "conditional": "Only if KB complexity decision identified a need for creative-to-technical translation",
+          "description": "Bridge entry required fields: category, parameters (array), intent_mappings keyed by subjective descriptor with: parameter, value_range [min, max], typical_default, confidence (0.0-1.0), source, why (human-readable rationale), anti_patterns.\n\nBridge is hybrid: pre-seeded with common mappings from research, auto-generated when agent encounters unmapped concepts, feedback-enriched when user evaluation refines entries.\n\nCombination layer: bridge entries can be composed. Cross-reference individual entries, identify compatible parameter ranges, flag conflicts between anti_patterns, propose combined recipe with lower confidence score.",
+          "output": "bridge-schema.json"
+        },
+        {
+          "title": "[Architect] — Define population strategy",
+          "owner": "[Architect]",
+          "description": "Placeholder seeding: what entries get created as placeholders during playbook setup (minimum one per topic per layer, with fallback content).\nHarvesting: where content comes from, quality criteria for harvested content.\nCuration rules: what must happen before harvested content becomes curated.\nSync rules: how curated entries get indexed.\nVersioning protocol: entries are append-only. Existing entries are never edited — they are superseded by new entries tagged with the relevant version. Old entries remain for reference or rollback. Queries filter by version tag.",
+          "output": "population-strategy.md"
+        },
+        {
+          "title": "[Architect] — Define index and directory structure",
+          "owner": "[Architect]",
+          "description": "Master index format (registry of all KBs, cross-topic mappings), per-KB index format (file listing by topic), per-KB manifest format (file status and sync history), cross-reference rules (results ranked by authority score), file naming conventions, exact directory tree.",
+          "output": "directory-structure.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: KB architecture specified",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "KB complexity decision documented with rationale",
+            "If multi-layer: every knowledge type from Phase 1 research assigned to exactly one layer",
+            "If multi-layer: no two layers cover the same knowledge type (separation rule verified)",
+            "Entry schema defined with all required fields, no placeholders",
+            "Bridge schema defined if domain requires translation layer",
+            "If bridge not needed: explicit justification documented",
+            "Population pipeline defined with source, quality criteria, and curation rules",
+            "Index and cross-reference structure defined with exact file formats",
+            "Directory tree specified down to file naming convention"
+          ],
+          "blocker_examples": [
+            "Chose 'structured multi-layer' for a simple ops checklist that has one knowledge type — over-engineered, switch to flat",
+            "Two layers both claim 'implementation patterns' — overlapping boundaries, merge or redefine separation rules",
+            "Entry schema lists fields but no example entry — an agent can't verify the schema works without a concrete example, add one"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "kb-architecture.md",
+              "entry-schema.json",
+              "bridge-schema.json (if applicable)",
+              "population-strategy.md",
+              "directory-structure.md"
+            ],
+            "next_phase_context": [
+              "kb-architecture.md (full)",
+              "entry-schema.json",
+              "bridge-schema.json (if applicable)",
+              "population-strategy.md",
+              "directory-structure.md",
+              "research/domain-analysis.md (for KB harvesting)",
+              "research/best-practices.md (for KB harvesting)",
+              "research/cross-cutting-concerns.md"
+            ],
+            "excluded_files": [
+              "scope.md and constraints.md — KB Bootstrapping does not need them; they re-enter context at Phase 4",
+              "research/requirements.md — needed at Phase 4, not Phase 3"
+            ],
+            "skill_validation": "none"
+          },
+          "guardrail_checks": [
+            "KB complexity level matches complexity_profile.knowledge dimension from Phase 0 — if flat domain has bridged KB design, or bridged domain has flat KB, confirm with [Stakeholder] before proceeding"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Phase 3: KB Bootstrapping",
+      "purpose": "Execute the KB blueprint from Phase 2: create the directory tree, seed placeholder entries, and harvest initial content from research documents. The KB must exist and be populated before process architecture can reference it.",
+      "compilation": {
+        "context_load": [
+          "kb-architecture.md (full)",
+          "entry-schema.json",
+          "bridge-schema.json (if applicable)",
+          "population-strategy.md",
+          "directory-structure.md",
+          "research/domain-analysis.md (for KB harvesting)",
+          "research/best-practices.md (for KB harvesting)",
+          "research/cross-cutting-concerns.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Builder — executing the KB blueprint with mechanical precision",
+        "objective": "Create the KB directory tree, seed all placeholder entries, and harvest initial content from research documents",
+        "pre_check": [
+          "kb-architecture.md exists with layer definitions",
+          "entry-schema.json exists with all required fields defined",
+          "directory-structure.md exists with exact directory tree specified",
+          "population-strategy.md exists with harvesting sources identified"
+        ],
+        "failure_modes_relevant": [
+          "FM-001",
+          "FM-014"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "directory-structure.md": 5,
+            "entry-schema.json": 5,
+            "kb-architecture.md (full)": 5,
+            "population-strategy.md": 4,
+            "research/domain-analysis.md (for KB harvesting)": 3,
+            "research/best-practices.md (for KB harvesting)": 3,
+            "research/cross-cutting-concerns.md": 3,
+            "bridge-schema.json (if applicable)": 3,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "KB directory tree matches directory-structure.md exactly",
+          "One placeholder entry per topic per layer created and conforms to entry-schema.json",
+          "All harvestable research content captured in KB entries (zero skipped items)",
+          "Master-index.json and per-layer manifests reflect actual entry counts",
+          "If bridge layer: at least one bridge entry per descriptor category conforming to bridge-schema.json"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "file_editing",
+          "json_validation"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "strict",
+          "verbosity": "detailed",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Builder] — Create KB directory tree",
+          "owner": "[Builder]",
+          "description": "Create the exact directory tree specified in directory-structure.md. Every directory in the tree must exist. Every _archive subdirectory must exist. Create master-index.json at the root. Create per-layer manifest.json files.\n\nVerify: directory count matches directory-structure.md specification exactly.",
+          "output": "kb/ directory tree, master-index.json, per-layer manifest.json files"
+        },
+        {
+          "title": "[Builder] — Seed placeholder entries",
+          "owner": "[Builder]",
+          "description": "Create one placeholder entry per topic per layer as defined in population-strategy.md. Each placeholder must conform to entry-schema.json with status='placeholder' and contain: id, kb, topic, status, version (0.1.0), title, summary (one sentence describing what this entry will contain), empty description.\n\nVerify: placeholder count matches the topic count from kb-architecture.md.",
+          "output": "kb/ placeholder entries (one per topic per layer)"
+        },
+        {
+          "title": "[Builder] — Harvest initial content from research documents",
+          "owner": "[Builder]",
+          "description": "Walk through research/domain-analysis.md, research/best-practices.md, and research/cross-cutting-concerns.md. For each knowledge item that maps to a KB layer topic, populate the corresponding placeholder entry with harvested content. Set status='harvested'.\n\nIf replacing an existing playbook and its KB data was flagged for harvest in Phase 1, include that source.\n\nUpdate per-layer manifest.json and master-index.json with entry counts.\n\nVerify: all harvestable items from research documents are captured. Zero placeholders remain for topics with available research data.",
+          "output": "kb/ harvested entries, updated manifests"
+        },
+        {
+          "title": "[Builder] — Create bridge entries",
+          "owner": "[Builder]",
+          "conditional": "Only if bridge layer was defined in Phase 2",
+          "description": "Create bridge entries per bridge-schema.json for the most common translation mappings identified in research. Each bridge entry maps a subjective descriptor to parameter ranges with confidence scores.\n\nMinimum: one bridge entry per identified descriptor category from research/domain-analysis.md.\n\nVerify: bridge entries conform to bridge-schema.json, all required fields present, confidence scores between 0.0 and 1.0.",
+          "output": "kb/bridge/ entries"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: KB bootstrapped and populated",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "KB directory tree exists and matches directory-structure.md specification",
+            "All placeholder entries created (one per topic per layer)",
+            "All harvestable research content has been captured in KB entries",
+            "Master-index.json and per-layer manifests reflect actual entry counts",
+            "If bridge layer: at least one bridge entry per descriptor category",
+            "Entry schema validation: every entry conforms to entry-schema.json"
+          ],
+          "guardrail_checks": [
+            "KB complexity level matches complexity_profile.knowledge dimension from Phase 0 — if flat domain has bridged KB design, or bridged domain has flat KB, confirm with [Stakeholder] before proceeding"
+          ],
+          "blocker_examples": [
+            "Directory tree created but no placeholder entries — KB is empty shell, not bootstrapped",
+            "Research documents contain 20 harvestable items but only 5 were captured — incomplete harvest",
+            "Bridge entries created but with no confidence scores — doesn't conform to bridge-schema.json"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "kb/ (full directory tree with entries)",
+              "kb/master-index.json",
+              "kb/*/manifest.json"
+            ],
+            "next_phase_context": [
+              "kb-architecture.md (summary — layer names and boundaries only)",
+              "research/requirements.md",
+              "research/cross-cutting-concerns.md",
+              "scope.md",
+              "constraints.md"
+            ],
+            "excluded_files": [
+              "Full KB entries — Process Architecture only needs layer names for phase-to-KB mapping",
+              "Population strategy — relevant during execution, not during process design",
+              "research/domain-analysis.md — knowledge types now captured in KB entries",
+              "research/best-practices.md — content now harvested into KB entries"
+            ],
+            "kb_status": {
+              "total_entries": 0,
+              "harvested": 0,
+              "placeholder": 0
+            },
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 4: Process Architecture",
+      "purpose": "Design the output playbook's phase structure, task granularity, dependencies, and gates.",
+      "compilation": {
+        "context_load": [
+          "kb-architecture.md (summary — layer names and boundaries only)",
+          "research/requirements.md",
+          "research/cross-cutting-concerns.md",
+          "scope.md",
+          "constraints.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Architect — structure, design, map. Fresh session benefits from reviewing with new eyes.",
+        "objective": "Design the output playbook's complete phase structure with task granularity, dependencies, gates, and document tree",
+        "pre_check": [
+          "KB complexity decided",
+          "layers defined (if multi-layer)",
+          "entry schema defined",
+          "population strategy defined"
+        ],
+        "failure_modes_relevant": [
+          "FM-018"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "kb-architecture.md": 5,
+            "research/requirements.md": 5,
+            "research/cross-cutting-concerns.md": 5,
+            "scope.md": 5,
+            "constraints.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Phase structure covers full process from start to finish",
+          "Task granularity standard documented",
+          "Dependencies mapped with no circular dependencies",
+          "Every phase has a gate with verifiable conditions",
+          "Document tree complete"
+        ],
+        "tools_available": [
+          "file_creation",
+          "file_reading",
+          "file_editing",
+          "decision_recording"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "low",
+          "creativity_level": "moderate",
+          "verbosity": "detailed",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Architect] — Define phase structure for the output playbook",
+          "owner": "[Architect]",
+          "description": "Phase design principles:\n1. Each phase is a coherent block of work with a clear objective\n2. A phase's output is the next phase's input\n3. Every phase ends with a gate — explicit approval criteria before proceeding\n4. Early phases: understanding (audit, research). Middle: doing (build, create). Late: verifying and operating (QA, launch, monitor)\n5. Cross-cutting concerns woven into relevant phases, not isolated",
+          "output": "architecture/phase-structure.md"
+        },
+        {
+          "title": "[Architect] — Define task granularity standard",
+          "owner": "[Architect]",
+          "description": "A task represents ONE deliverable or ONE decision. If a task takes more than 4 hours or requires multiple skill sets, split it. If a task can't fail independently of the next task, merge them. Every task must be completable by the assigned role without ambiguity.\n\nTitle-only vs description rules:\n- TITLE ONLY: simple, obvious actions\n- SHORT DESCRIPTION: tasks with specific requirements\n- DETAILED DESCRIPTION: tasks requiring methodology, syntax, decision criteria, or multi-step procedures",
+          "output": "architecture/task-granularity.md"
+        },
+        {
+          "title": "[Architect] — Map phase dependencies",
+          "owner": "[Architect]",
+          "description": "For each phase: hard dependencies (must complete first), soft dependencies (should complete), parallel opportunities (can run simultaneously). Within phases: which tasks block others.",
+          "output": "architecture/dependency-map.md"
+        },
+        {
+          "title": "[Architect] — Design phase gates",
+          "owner": "[Architect]",
+          "description": "For each phase: what must be TRUE before the next phase starts, what deliverables must exist, what quality checks must pass.\n\nGate conditions must be VERIFIABLE, not subjective:\n- Good: 'All 15 city pages have 300+ words of unique localized content'\n- Bad: 'City pages are done'\n\nEach gate includes blocker_examples — specific scenarios that would prevent advancement.",
+          "output": "architecture/phase-gates.md"
+        },
+        {
+          "title": "[Architect] — Identify early assessment/detection phases needed",
+          "owner": "[Architect]",
+          "description": "Does this domain have variable starting conditions that affect the workflow? Does detection change the workflow? Does the playbook need an environment setup phase? Does it need a deconstruction/audit phase before implementation? If yes, design these as dedicated phases BEFORE any implementation work.",
+          "output": "architecture/phase-structure.md (updated)"
+        },
+        {
+          "title": "[Architect] — Define the deliverable document tree",
+          "owner": "[Architect]",
+          "description": "Which tasks produce documents, file path/naming conventions, which documents feed into later tasks. Every task that says 'Document in X' must have X defined here.",
+          "output": "architecture/document-tree.md"
+        },
+        {
+          "title": "[Stakeholder] — Review and approve architecture",
+          "owner": "[Stakeholder]",
+          "description": "Phase structure covers the full process. No gaps between phases. Phase gates are meaningful, not rubber stamps. Task granularity matches target user capability. Architecture satisfies all requirements from research/requirements.md."
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Architecture approved",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "Phase structure covers full process from start to finish",
+            "Task granularity standard documented and approved",
+            "Dependencies mapped with no circular dependencies",
+            "Every phase has a gate with verifiable conditions and blocker examples",
+            "Early assessment/detection phases included if domain requires them",
+            "Document tree complete — every referenced document has a defined path",
+            "Architecture satisfies requirements.md"
+          ],
+          "blocker_examples": [
+            "Phase structure missing detection phase for platform-specific playbook — add before implementation",
+            "Gates are vague ('research done') — make verifiable",
+            "Document tree has placeholder paths — resolve before Phase 4"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "architecture/phase-structure.md",
+              "architecture/task-granularity.md",
+              "architecture/dependency-map.md",
+              "architecture/phase-gates.md",
+              "architecture/document-tree.md"
+            ],
+            "next_phase_context": [
+              "architecture/phase-structure.md",
+              "architecture/task-granularity.md",
+              "kb-architecture.md (layer names)",
+              "research/cross-cutting-concerns.md",
+              "scope.md",
+              "constraints.md"
+            ],
+            "excluded_files": [
+              "Dependency map detail — used during architecture, referenced if questions arise during task engineering",
+              "Full requirements.md — architecture already satisfies it",
+              "Document tree — referenced during task engineering if needed"
+            ],
+            "skill_validation": "none"
+          },
+          "guardrail_checks": [
+            "Phase count matches complexity_profile.process dimension from Phase 0 — simple: 5-8 phases, standard: 8-13, complex: 12-18 — if outside range, confirm with [Stakeholder] before proceeding"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Phase 5: Role Engineering",
+      "purpose": "Define the functional roles for the output playbook. Who does what, who approves what, how do roles hand off work.",
+      "compilation": {
+        "context_load": [
+          "architecture/phase-structure.md",
+          "architecture/task-granularity.md",
+          "kb-architecture.md (layer names)",
+          "research/cross-cutting-concerns.md",
+          "scope.md",
+          "constraints.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Architect — designing roles as capabilities, not org chart positions",
+        "objective": "Define all functional roles, handoff points, and escalation paths for the output playbook",
+        "pre_check": [
+          "Phase structure covers full process",
+          "task granularity standard documented",
+          "dependencies mapped",
+          "every phase has a gate"
+        ],
+        "failure_modes_relevant": [],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "architecture/phase-structure.md": 5,
+            "architecture/task-granularity.md": 5,
+            "kb-architecture.md": 5,
+            "research/cross-cutting-concerns.md": 5,
+            "scope.md": 5,
+            "constraints.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none"
+      },
+      "items": [
+        {
+          "title": "[Architect] — Define all roles for the output playbook",
+          "owner": "[Architect]",
+          "description": "For each role: name (bracket syntax: [RoleName]), one-line responsibility description, skills/knowledge required, tools/access needed, decision authority.\n\nRole design principles:\n1. Every task must have exactly one owner\n2. No role should appear fewer than 3 times — if it does, expand scope or merge\n3. Roles map to capabilities, not people\n4. Include coordination roles, QA roles, and decision roles",
+          "output": "architecture/role-definitions.md"
+        },
+        {
+          "title": "[Architect] — Define handoff points between roles",
+          "owner": "[Architect]",
+          "description": "Where does one role's output become another role's input? For each handoff: what is transferred, in what format, what constitutes a complete handoff.",
+          "output": "architecture/handoff-points.md"
+        },
+        {
+          "title": "[Architect] — Define escalation paths",
+          "owner": "[Architect]",
+          "description": "When a task is blocked, who resolves it? Technical blockers, business/strategy questions, quality disputes, resource conflicts, scope questions. For single-agent systems: escalation = ask the human.",
+          "output": "architecture/escalation-paths.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Roles defined, handoffs documented",
+          "owner": "[Coordinator]",
+          "description": "Note: orphaned/undefined role verification happens in Phase 8 (JSON Assembly) after tasks are written.",
+          "gate_conditions": [
+            "All roles defined with responsibilities, required skills, and decision authority",
+            "Role count is appropriate for playbook complexity (minimum 2, justified if more than 6)",
+            "Handoff points documented for every role transition",
+            "Escalation paths defined"
+          ],
+          "blocker_examples": [
+            "Role appears in only one task — expand scope or merge with another role",
+            "Role mentioned in tasks but not defined — add definition",
+            "No escalation path for technical blockers — define before proceeding"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "architecture/role-definitions.md",
+              "architecture/handoff-points.md",
+              "architecture/escalation-paths.md"
+            ],
+            "next_phase_context": [
+              "architecture/role-definitions.md",
+              "architecture/phase-structure.md",
+              "architecture/task-granularity.md",
+              "architecture/phase-gates.md",
+              "kb-architecture.md (layer names — needed for writing output playbook handoff blocks)",
+              "research/cross-cutting-concerns.md (needed for weaving concerns into tasks)"
+            ],
+            "excluded_files": [
+              "Role engineering discussion and alternatives considered — captured in role-definitions.md",
+              "Escalation paths and handoff points — referenced during task writing if needed"
+            ],
+            "skill_validation": "none"
+          },
+          "guardrail_checks": [
+            "Role count matches complexity_profile.roles dimension from Phase 0 — minimal: 2-3 roles, standard: 3-5, full: 4-8 — if outside range, confirm with [Stakeholder] before proceeding"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Phase 6: Task Engineering",
+      "purpose": "Write every task in the output playbook. This is where most of the output quality is created.",
+      "compilation": {
+        "context_load": [
+          "architecture/role-definitions.md",
+          "architecture/phase-structure.md",
+          "architecture/task-granularity.md",
+          "architecture/phase-gates.md",
+          "kb-architecture.md (layer names)",
+          "research/cross-cutting-concerns.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Builder — writing concrete tasks, not designing structure. Every task must be executable by reading title + description alone.",
+        "objective": "Write all task titles, descriptions, gates with handoff blocks, and weave cross-cutting concerns throughout",
+        "pre_check": [
+          "All roles defined with responsibilities",
+          "handoff points documented",
+          "escalation paths defined"
+        ],
+        "failure_modes_relevant": [
+          "FM-002",
+          "FM-013"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "architecture/role-definitions.md": 5,
+            "architecture/phase-structure.md": 5,
+            "architecture/task-granularity.md": 5,
+            "architecture/phase-gates.md": 5,
+            "kb-architecture.md": 5,
+            "research/cross-cutting-concerns.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "All tasks written with titles and descriptions per granularity standard",
+          "Implementation methods specified on all technical tasks",
+          "Every phase has a compilation block and gate task with handoff block",
+          "Cross-cutting concerns appear in 3+ phases each",
+          "No placeholder text anywhere"
+        ],
+        "tools_available": [
+          "file_creation",
+          "file_reading",
+          "file_editing"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "strict",
+          "verbosity": "detailed",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Builder] — Write all task titles",
+          "owner": "[Builder]",
+          "description": "Title format: [Role] — Action verb + specific deliverable\n\nRules:\n1. Start with [Role] bracket\n2. Use action verbs: Build, Create, Configure, Audit, Validate, Document, Review, Deploy, Test, Fix\n3. Be specific: 'Build homepage' not 'Work on homepage'\n4. Include quantity or scope where relevant\n5. Every title must be understandable without reading the description\n\nWrite all tasks in drafts/task-list-v0.1.md first. JSON comes later.",
+          "output": "drafts/task-list-v0.1.md"
+        },
+        {
+          "title": "[Builder] — Write task descriptions for all non-obvious tasks",
+          "owner": "[Builder]",
+          "description": "WHEN to include: task has specific requirements, requires methodology, has acceptance criteria beyond 'done', involves a decision with criteria, has anti-patterns, produces a document, has dependencies.\n\nDESCRIPTION STRUCTURE:\n- WHAT: what exactly is being produced\n- HOW: methodology, tools, commands, syntax rules\n- SPECS: quantitative requirements\n- DON'T: anti-patterns and common mistakes\n- OUTPUT: document path or deliverable name\n- VERIFY: how to confirm the task is done correctly\n\nQUALITY CHECK: Could someone unfamiliar with this project execute this task using only the description?"
+        },
+        {
+          "title": "[Builder] — Include implementation method on all technical tasks",
+          "owner": "[Builder]",
+          "description": "For every implementation task, specify: which tools/interfaces to use, where content/data lives, what scope the edit has, what syntax rules or constraints apply, what NOT to do, what to test after the edit.\n\nA task that says 'build X' without specifying how is incomplete."
+        },
+        {
+          "title": "[Builder] — Include risk levels on tasks that affect shared resources",
+          "owner": "[Builder]",
+          "description": "Any task that edits a global or shared element must include: SCOPE (isolated / template-level / global), BLAST RADIUS (what else is affected), RISK LEVEL (low / medium / high), ROLLBACK (how to undo), TEST AFTER (specific things to verify)."
+        },
+        {
+          "title": "[Builder] — Write phase compilation blocks and gate tasks with handoff blocks",
+          "owner": "[Builder]",
+          "description": "Every phase opens with a compilation block: context_load, role_mindset, objective, pre_check, failure_modes_relevant.\n\ncontext_load is derived from the previous phase's next_phase_context plus decisions-ledger.md and artifact-manifest.md.\npre_check conditions must be verifiable — typically the previous phase's gate conditions.\nfailure_modes_relevant is [] for v1.0 playbooks.\n\nOptional compilation fields for agent tuning: success_criteria (what the phase must produce — mirrors gate_conditions so agent sees targets at phase start), tools_available (restricts agent to relevant capabilities), behavioral_profile (risk_tolerance, creativity_level, verbosity, stance).\n\nEvery phase ends with a gate task assigned to [Coordinator].\nGate format: '[Coordinator] — Phase gate: [comma-separated verifiable conditions]'\nEvery gate includes blocker_examples and handoff block: output_artifacts, next_phase_context, excluded_files, skill_validation."
+        },
+        {
+          "title": "[Builder] — Weave cross-cutting concerns into relevant tasks",
+          "owner": "[Builder]",
+          "description": "From cross-cutting concerns identified in Phase 1. Each concern must appear in at least 3 phases. Cross-cutting concerns that only appear once are audit failures."
+        },
+        {
+          "title": "[Auditor] — Review all tasks for completeness and clarity",
+          "owner": "[Auditor]",
+          "description": "Binary verification checklist:\n- Does each task have a [Role] owner? Y/N\n- Is each title specific and actionable? Y/N\n- Does each non-obvious task have a description? Y/N\n- Does each description answer what, how, and how to verify? Y/N\n- Do implementation tasks include method specification? Y/N\n- Do shared-resource tasks include risk levels? Y/N\n- Is there any placeholder text (TBD, TODO)? Y/N\n- Is terminology consistent across all tasks? Y/N\n- Do file paths in descriptions match the document tree? Y/N\n- Does the [Role] in each title match the owner field? Y/N"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: All tasks engineered",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "All tasks written with titles and descriptions per granularity standard",
+            "Implementation methods specified on all technical tasks",
+            "Risk levels assigned on shared-resource tasks",
+            "Every phase has a compilation block with context_load, role_mindset, objective, pre_check, failure_modes_relevant",
+            "Every phase has a gate task with handoff block",
+            "Cross-cutting concerns appear in 3+ phases each",
+            "[Auditor] review passed with no unresolved issues",
+            "No placeholder text anywhere"
+          ],
+          "blocker_examples": [
+            "A task says 'Build the dashboard' with no description — violates granularity standard, needs WHAT/HOW/SPECS/VERIFY",
+            "Cross-cutting concern only appears in the design phase — must also appear in build, QA, and monitoring phases",
+            "Gate handoff lists next_phase_context but no excluded_context — handoff is incomplete"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "drafts/task-list-v0.1.md (includes all gate definitions with handoffs)"
+            ],
+            "next_phase_context": [
+              "drafts/task-list-v0.1.md",
+              "architecture/phase-structure.md",
+              "kb-architecture.md (layer names)",
+              "architecture/role-definitions.md"
+            ],
+            "excluded_files": [
+              "Task engineering discussion and iterations — final tasks captured in task-list",
+              "Auditor review notes — issues resolved, fixes applied"
+            ],
+            "skill_validation": "none"
+          },
+          "guardrail_checks": [
+            "Task count matches complexity_profile.process dimension from Phase 0 — simple: 30-60 tasks, standard: 60-150, complex: 120-300 — if outside range, confirm with [Stakeholder] before proceeding"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Phase 7: Output Configuration",
+      "purpose": "Define how the output playbook is used: workflow model, session strategy, KB mapping, skill activation, router, and post-run review guidance.",
+      "compilation": {
+        "context_load": [
+          "drafts/task-list-v0.1.md",
+          "architecture/phase-structure.md",
+          "kb-architecture.md (layer names)",
+          "architecture/role-definitions.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Architect — designing how the playbook operates, not what it contains",
+        "objective": "Define workflow model, usage instructions, session strategy, KB mapping, skill activation, router, and post-run review",
+        "pre_check": [
+          "All tasks engineered with titles and descriptions",
+          "gates have handoff blocks",
+          "cross-cutting concerns woven into 3+ phases each",
+          "Auditor review passed"
+        ],
+        "failure_modes_relevant": [
+          "FM-020"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "drafts/task-list-v0.1.md": 5,
+            "architecture/phase-structure.md": 5,
+            "kb-architecture.md": 5,
+            "architecture/role-definitions.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Workflow model defined with justification",
+          "Usage instructions cover start, session breaks, and context carry",
+          "Phase-to-KB-layer mapping consistent with KB layer definitions",
+          "Compilation block tuning (success_criteria, tools_available, behavioral_profile) specified for output playbook phases",
+          "Router/dispatcher defined",
+          "Post-run review structure defined"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "file_editing",
+          "user_questioning"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "low",
+          "creativity_level": "conservative",
+          "verbosity": "comprehensive",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Architect] — Define workflow model and role descriptions",
+          "owner": "[Architect]",
+          "description": "Workflow model: human-in-the-loop, fully autonomous, human-directed, or custom. Role descriptions for the output playbook (from Phase 4 role definitions, condensed for the JSON).",
+          "output": "output-config.md"
+        },
+        {
+          "title": "[Architect] — Define usage instructions",
+          "owner": "[Architect]",
+          "description": "How to start: what context to provide for the first phase. Session strategy: which phases can share a session, where to break, what context to carry. Cost optimization: how to minimize token usage while maintaining quality. General operating rules that apply to all phases.",
+          "output": "output-config.md"
+        },
+        {
+          "title": "[Architect] — Define compilation block tuning for output playbook phases",
+          "owner": "[Architect]",
+          "description": "For each phase in the output playbook, specify optional compilation block fields that tune agent behavior:\n\n- success_criteria (array of strings): What the agent must produce/achieve — surfaced at phase START so the agent works toward explicit targets. Should align with gate_conditions.\n- tools_available (array of strings): Capability restriction — prevents role bleed by limiting what the agent can do (e.g., file_reading, file_creation, web_search, user_questioning, json_validation, script_execution).\n- behavioral_profile (object): Phase-specific tuning with four dimensions: risk_tolerance (minimal|low|moderate|high), creativity_level (strict|conservative|moderate|exploratory), verbosity (minimal|concise|detailed|comprehensive), stance (supportive|neutral|critical|adversarial).\n\nGuidelines: Research phases typically get moderate risk + exploratory creativity. Build/assembly phases get minimal risk + strict creativity. Audit phases get minimal risk + adversarial stance. All three fields are optional — omit them only for phases where generic behavior is acceptable.",
+          "output": "output-config.md"
+        },
+        {
+          "title": "[Architect] — Define phase-to-KB-layer mapping",
+          "owner": "[Architect]",
+          "description": "For each phase in the output playbook: which KB layers are relevant. No phase loads the entire KB — only the layers it needs. Must be consistent with KB layer definitions from Phase 2.",
+          "output": "output-config.md"
+        },
+        {
+          "title": "[Architect] — Define skill activation mapping",
+          "owner": "[Architect]",
+          "description": "For each phase: which prompting skill/mode to activate (or 'none'). Must be consistent with the skill field in each gate's handoff block. For new domains without existing skills, all values are 'none'. Skills are identified after execution runs and added in subsequent playbook versions.",
+          "output": "output-config.md"
+        },
+        {
+          "title": "[Architect] — Define router/dispatcher and context preservation specification",
+          "owner": "[Architect]",
+          "description": "Router: a short prompt or decision tree at the entry point. Given a user request, the router determines: which KB layers to load, which playbook phase applies, and which skill to activate.\n\nFor single-layer/flat KB playbooks: router is trivial.\nFor multi-layer KB playbooks: router maps request type to minimum KB slice.\n\nContext preservation: define the two persistent files for the output playbook (decisions ledger and artifact manifest) — file paths, format, update rules, what never to exclude. File paths must match what compilation blocks reference in context_load.",
+          "output": "output-config.md"
+        },
+        {
+          "title": "[Architect] — Define post-run review structure",
+          "owner": "[Architect]",
+          "description": "What to assess after the output playbook completes a run: what went well, what didn't, what should change, metrics target vs actual, quality assessment. This is guidance, not a template.",
+          "output": "output-config.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Output configuration complete",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "Workflow model defined",
+            "Roles defined with responsibilities and decision authority",
+            "Usage instructions cover how to start, where to break sessions, what context to carry",
+            "Phase-to-KB-layer mapping is consistent with KB layer definitions from Phase 2",
+            "Skill activation is defined for every phase (even if 'none')",
+            "Router/dispatcher defined (or explicitly trivial for flat-KB playbooks)",
+            "Post-run review structure defined"
+          ],
+          "blocker_examples": [
+            "Phase-to-KB-layer mapping references a layer not defined in Phase 2 — reconcile",
+            "Skill activation inconsistent with gate handoff skill fields — fix one or the other",
+            "Usage instructions don't explain how to start the first session — add initial context guidance"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "output-config.md"
+            ],
+            "next_phase_context": [
+              "output-config.md (summary)",
+              "architecture/phase-structure.md",
+              "drafts/task-list-v0.1.md"
+            ],
+            "excluded_files": [
+              "Session strategy rationale — captured in output-config.md",
+              "Alternative workflow models considered — final choice documented"
+            ],
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 8: Metrics & KPI Definition",
+      "purpose": "Define measurable success criteria for the output playbook.",
+      "compilation": {
+        "context_load": [
+          "output-config.md (summary)",
+          "architecture/phase-structure.md",
+          "drafts/task-list-v0.1.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md",
+          "metrics-tracker.md"
+        ],
+        "role_mindset": "Researcher — defining what success looks like, not building it. Domain outcome metrics require understanding what the playbook is supposed to achieve.",
+        "objective": "Define process, output quality, and domain outcome metrics with targets and measurement methods",
+        "pre_check": [
+          "Workflow model defined",
+          "usage instructions defined",
+          "KB mapping and skill activation defined",
+          "router defined"
+        ],
+        "failure_modes_relevant": [
+          "FM-016"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "output-config.md": 5,
+            "architecture/phase-structure.md": 5,
+            "drafts/task-list-v0.1.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2,
+            "metrics-tracker.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "At least one process metric defined with measurement method",
+          "At least one output quality metric defined with measurement method",
+          "At least one domain outcome metric defined with measurement method",
+          "All metrics have title, description, type, and target",
+          "Stakeholder approved metrics and targets"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "file_editing",
+          "user_questioning"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "moderate",
+          "creativity_level": "moderate",
+          "verbosity": "comprehensive",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Researcher] — Define process metrics",
+          "owner": "[Researcher]",
+          "description": "Metrics measuring the execution of the playbook itself: duration metrics (time to complete, time per phase), volume metrics (tasks completed, deliverables produced), quality metrics (issues found at QA, rework count, gate failures).\n\nFor each: title, description, type (metric_integer | metric_currency | metric_duration), category ('process'), target, measurement method.",
+          "output": "metrics-definition.md"
+        },
+        {
+          "title": "[Researcher] — Define output quality metrics",
+          "owner": "[Researcher]",
+          "description": "Metrics measuring the QUALITY of the work produced: gate pass rate, audit findings count, description completeness, domain-specific quality measures.\n\nFor each: title, description, type, category ('output_quality'), target, measurement method.",
+          "output": "metrics-definition.md"
+        },
+        {
+          "title": "[Researcher] — Define domain outcome metrics",
+          "owner": "[Researcher]",
+          "description": "Metrics measuring whether the playbook achieved its PURPOSE. These are entirely domain-specific (downloads, revenue, coverage, compliance score, etc.). For optimization playbooks: include BEFORE and AFTER variants.\n\nAt least one metric in this category is mandatory — a playbook without outcome metrics can't prove it worked.",
+          "output": "metrics-definition.md"
+        },
+        {
+          "title": "[Stakeholder] — Review and approve metrics",
+          "owner": "[Stakeholder]",
+          "description": "Metrics align with business goals from Phase 0. Targets are ambitious but achievable. Every metric has a clear measurement method. At least one metric in each of the three categories."
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Metrics defined and approved",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "At least one process metric defined",
+            "At least one output quality metric defined",
+            "At least one domain outcome metric defined",
+            "All metrics have title, description, type, and measurement method",
+            "Targets set where applicable",
+            "[Stakeholder] approved"
+          ],
+          "blocker_examples": [
+            "No domain outcome metric defined — a playbook that can't prove it worked is incomplete",
+            "Metric has no measurement method — define how to measure before proceeding"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "metrics-definition.md"
+            ],
+            "next_phase_context": [
+              "metrics-definition.md",
+              "drafts/task-list-v0.1.md",
+              "output-config.md",
+              "scope.md",
+              "constraints.md",
+              "research/cross-cutting-concerns.md",
+              "kb-architecture.md (full)",
+              "entry-schema.json",
+              "bridge-schema.json (if applicable)",
+              "population-strategy.md",
+              "directory-structure.md",
+              "architecture/role-definitions.md",
+              "architecture/phase-structure.md"
+            ],
+            "excluded_files": [
+              "Metric alternatives discussed and rejected — final metrics captured",
+              "Task granularity and dependency docs — content reflected in the task list"
+            ],
+            "skill_validation": "none",
+            "metrics_snapshot": {
+              "collect": [
+                "MET-04"
+              ],
+              "record_in": "metrics-tracker.md"
+            }
+          },
+          "guardrail_checks": [
+            "Metrics count matches complexity_profile from Phase 0 — simple: 3-5 metrics, standard: 5-10, complex: 8-20 — if outside range, confirm with [Stakeholder] before proceeding"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Phase 9: JSON Assembly",
+      "purpose": "Assemble the complete output playbook JSON from all design documents. This phase focuses on assembly and syntax — structural validation happens in Phase 10.",
+      "compilation": {
+        "context_load": [
+          "metrics-definition.md",
+          "drafts/task-list-v0.1.md",
+          "output-config.md",
+          "scope.md",
+          "constraints.md",
+          "research/cross-cutting-concerns.md",
+          "kb-architecture.md (full)",
+          "entry-schema.json",
+          "bridge-schema.json (if applicable)",
+          "population-strategy.md",
+          "directory-structure.md",
+          "architecture/role-definitions.md",
+          "architecture/phase-structure.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md",
+          "metrics-tracker.md"
+        ],
+        "role_mindset": "Builder — assembling JSON from source documents. Mechanical precision, no creative interpretation.",
+        "objective": "Assemble the complete output playbook JSON with all 16 required top-level fields and validate syntax",
+        "pre_check": [
+          "At least one metric per category defined",
+          "All metrics approved by Stakeholder"
+        ],
+        "failure_modes_relevant": [
+          "FM-003",
+          "FM-004",
+          "FM-005",
+          "FM-006",
+          "FM-007",
+          "FM-008",
+          "FM-011",
+          "FM-019"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "metrics-definition.md": 5,
+            "drafts/task-list-v0.1.md": 5,
+            "output-config.md": 5,
+            "kb-architecture.md": 5,
+            "architecture/role-definitions.md": 5,
+            "architecture/phase-structure.md": 5,
+            "research/cross-cutting-concerns.md": 4,
+            "entry-schema.json": 4,
+            "scope.md": 3,
+            "constraints.md": 3,
+            "bridge-schema.json": 3,
+            "population-strategy.md": 3,
+            "directory-structure.md": 3,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2,
+            "metrics-tracker.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "JSON parses without errors",
+          "All 16 required top-level fields present",
+          "All checklists have title, purpose, compilation, and non-empty items array",
+          "Every item has title and owner fields"
+        ],
+        "tools_available": [
+          "file_creation",
+          "file_reading",
+          "file_editing",
+          "json_validation"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "strict",
+          "verbosity": "concise",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Builder] — Assemble the playbook JSON structure",
+          "owner": "[Builder]",
+          "description": "Required top-level fields: title, version, description, workflow_model, roles, scope, cross_cutting_concerns, knowledge_base, checklists, metrics, usage_instructions, failure_modes, phase_kb_mapping, skill_activation, router, context_preservation.\n\nChecklist item fields: title (required, starts with [Role]), owner (required, must match [Role] in title), description (optional), conditional (optional), output (optional).\n\nGate item additional fields: gate_conditions (required array), blocker_examples (required array), handoff (required object with output_artifacts, next_phase_context, excluded_files).\n\nCompilation block fields: context_load, role_mindset, objective, pre_check, failure_modes_relevant, agent_config, system_prompt_auto, context_budget, skill_preparation, success_criteria (optional), tools_available (optional), behavioral_profile (optional)."
+        },
+        {
+          "title": "[Builder] — Validate JSON syntax",
+          "owner": "[Builder]",
+          "description": "Parse without errors. No trailing commas, unescaped characters, mismatched brackets. All string values properly escaped.\n\nVerification: python3 -c \"import json; json.load(open('drafts/playbook-v0.1.json'))\""
+        },
+        {
+          "title": "[Coordinator] — Phase gate: JSON assembled and syntactically valid",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "JSON parses without errors",
+            "All 16 required top-level fields present",
+            "All checklists have title, purpose, compilation, and non-empty items array",
+            "Every item has title and owner fields"
+          ],
+          "blocker_examples": [
+            "JSON has trailing comma after last array element — parser rejects it, fix syntax",
+            "Missing required top-level field — check the 16-field checklist"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "drafts/playbook-v0.1.json"
+            ],
+            "next_phase_context": [
+              "drafts/playbook-v0.1.json (full)",
+              "research/requirements.md",
+              "research/cross-cutting-concerns.md"
+            ],
+            "excluded_files": [
+              "All source documents — consolidated into JSON",
+              "KB specification docs — embedded in JSON knowledge_base section"
+            ],
+            "metrics_snapshot": {
+              "collect": [
+                "MET-01",
+                "MET-02"
+              ],
+              "record_in": "metrics-tracker.md"
+            },
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 10: JSON Validation & Consistency",
+      "purpose": "Validate the assembled JSON for structural completeness, role consistency, KB schema integrity, compilation block consistency, and cross-cutting concern coverage. Fresh session with lighter context.",
+      "compilation": {
+        "context_load": [
+          "drafts/playbook-v0.1.json",
+          "research/requirements.md",
+          "research/cross-cutting-concerns.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md",
+          "metrics-tracker.md"
+        ],
+        "role_mindset": "Auditor — validating with fresh eyes. The JSON was assembled in a previous session; now verify it independently.",
+        "objective": "Validate structural completeness, role consistency, KB schema, compilation blocks, summary views, failure modes, and cross-cutting concerns",
+        "pre_check": [
+          "JSON parses without errors",
+          "All 16 required top-level fields present"
+        ],
+        "failure_modes_relevant": [
+          "FM-003",
+          "FM-004",
+          "FM-005",
+          "FM-006",
+          "FM-007",
+          "FM-008",
+          "FM-009",
+          "FM-010",
+          "FM-011",
+          "FM-021",
+          "FM-022",
+          "FM-024",
+          "FM-025"
+        ],
+        "agent_config": {
+          "temperature": 0.25
+        },
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "drafts/playbook-v0.1.json": 5,
+            "research/requirements.md": 5,
+            "research/cross-cutting-concerns.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2,
+            "metrics-tracker.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "All structural validation checks pass",
+          "All [Role] references are consistent and defined",
+          "Every phase has a compilation block with all required fields",
+          "Compilation context_load is consistent with previous phase's next_phase_context",
+          "Summary views match gate handoffs",
+          "Manual review passed"
+        ],
+        "tools_available": [
+          "file_reading",
+          "json_validation",
+          "script_execution"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "strict",
+          "verbosity": "concise",
+          "stance": "critical"
+        }
+      },
+      "items": [
+        {
+          "title": "[Auditor] — Validate structural completeness",
+          "owner": "[Auditor]",
+          "description": "Every checklist has title, purpose, and non-empty items array. Every item has a title starting with [Role]. Every item has an owner field matching the [Role] in title. Phase numbering is sequential. metrics[] is not empty. All required top-level fields present and non-empty.\n\nValidate cross_cutting_concerns: every CCC object has id, title, description, enforcement_method, enforcement_rule, minimum_phases. Each CCC's phases_applied lists at least minimum_phases entries. CCC IDs are unique (CCC-NNN format). enforcement_method is one of: checklist_items, gate_condition, compilation_precheck, task_description."
+        },
+        {
+          "title": "[Auditor] — Validate [Role] consistency",
+          "owner": "[Auditor]",
+          "description": "Extract all [Role] references from task titles. Compare against roles defined in the roles{} section. No typos, no orphaned roles (appear < 3 times), no undefined roles. Every owner field matches the [Role] in its task title."
+        },
+        {
+          "title": "[Auditor] — Validate KB schema section",
+          "owner": "[Auditor]",
+          "description": "If knowledge_base.layers is non-empty: every layer has name, domain boundary, authority score, separation rule. Entry schema has all required fields. Bridge schema (if present) has all required fields. Population strategy is complete. Directory structure is buildable.\n\nIf knowledge_base is minimal/flat: at minimum a description of the reference format and location."
+        },
+        {
+          "title": "[Auditor] — Validate compilation blocks on every phase",
+          "owner": "[Auditor]",
+          "description": "Every checklist entry has a compilation block with all required fields. context_load always includes decisions-ledger.md and artifact-manifest.md (except Phase 0). pre_check conditions are verifiable (not subjective). role_mindset is defined. objective is a single clear line. failure_modes_relevant references valid FM-IDs (or is empty for v1.0). Each phase's context_load is consistent with the previous phase's next_phase_context.\n\nIf optional fields are present: success_criteria aligns with gate_conditions (not contradictory, similar scope). tools_available is appropriate for the role_mindset (e.g., Researcher has web_search, Builder does not). behavioral_profile values are internally consistent (e.g., not minimal risk + exploratory creativity)."
+        },
+        {
+          "title": "[Auditor] — Validate summary views match gate sources",
+          "owner": "[Auditor]",
+          "description": "phase_kb_mapping entries must be consistent with next_phase_context in gate handoffs. skill_activation entries must match skill_validation field in gate handoffs. Flag any inconsistencies as errors."
+        },
+        {
+          "title": "[Auditor] — Validate failure_modes section",
+          "owner": "[Auditor]",
+          "description": "failure_modes array exists (may be empty for v1.0). If populated: every entry has all required fields (id, symptom, root_cause, fix, prevention, phase, severity, source). severity values valid: crash | error | degraded | cosmetic. phase values reference actual phases. FM-IDs in compilation blocks reference existing entries. No duplicate FM-IDs."
+        },
+        {
+          "title": "[Auditor] — Validate metrics section",
+          "owner": "[Auditor]",
+          "description": "Every metric has id (MET-NNN), title, description, type, category, measurement_method. Metric IDs are unique. At least one metric per category (process, output_quality, domain_outcome). If metrics_snapshot fields exist in gate handoffs, all referenced metric IDs exist in metrics[]."
+        },
+        {
+          "title": "[Auditor] — Manual review of assembled JSON",
+          "owner": "[Auditor]",
+          "description": "Read through entire playbook as a user would: Do tasks flow logically within each phase? Are descriptions consistent in tone and detail level? Would you know how to complete every task from title + description alone? Are metrics measurable with the tools/access defined?"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: JSON valid and structurally complete",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "All structural validation checks pass",
+            "All [Role] references are consistent and defined",
+            "KB schema section is valid and complete (or explicitly minimal)",
+            "Every phase has a compilation block with all required fields",
+            "Compilation context_load is consistent with previous phase's next_phase_context",
+            "failure_modes section valid (empty or well-formed)",
+            "Summary views (phase_kb_mapping, skill_activation) match gate handoffs",
+            "All CCC objects have required fields and phases_applied meets minimum_phases",
+            "All metric IDs are unique and metrics_snapshot references are valid",
+            "Manual review passed"
+          ],
+          "blocker_examples": [
+            "A [Role] appears in 2 task titles but is not in the roles{} section — undefined role, fix",
+            "phase_kb_mapping says Phase 3 uses 'dsp-kb' but no gate handoff references that layer — reconcile",
+            "CCC-02 has phases_applied with only 2 entries but minimum_phases is 3 — weave into additional phase"
+          ],
+          "guardrail_checks": [
+            "Total phases, tasks, roles, CCCs, and metrics are within complexity_profile guardrail ranges — if outside, confirm with [Stakeholder]"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "drafts/playbook-v0.1.json"
+            ],
+            "next_phase_context": [
+              "drafts/playbook-v0.1.json (full)",
+              "research/requirements.md",
+              "research/cross-cutting-concerns.md"
+            ],
+            "excluded_files": [
+              "All intermediate drafts — consolidated into JSON",
+              "Validation logs — issues fixed"
+            ],
+            "metrics_snapshot": {
+              "collect": [
+                "MET-03"
+              ],
+              "record_in": "metrics-tracker.md"
+            },
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 11: Quality Audit — Gap Analysis",
+      "purpose": "Systematic audit of the assembled playbook against requirements, cross-cutting concerns, phase flow, contradictions, completability, and detail level. All audit tasks use binary yes/no checklists.",
+      "compilation": {
+        "context_load": [
+          "drafts/playbook-v0.1.json",
+          "research/requirements.md",
+          "research/cross-cutting-concerns.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md",
+          "metrics-tracker.md"
+        ],
+        "role_mindset": "Auditor — reviewing with fresh eyes, not defending previous work. Binary yes/no judgments, no hedging.",
+        "objective": "Systematically audit the playbook for requirements gaps, cross-cutting coverage, phase flow, contradictions, completability, detail level, and KB integrity",
+        "pre_check": [
+          "JSON parses without errors",
+          "all structural validations pass",
+          "all Role references consistent"
+        ],
+        "failure_modes_relevant": [
+          "FM-002"
+        ],
+        "agent_config": {
+          "temperature": 0.25
+        },
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "drafts/playbook-v0.1.json": 5,
+            "research/requirements.md": 5,
+            "research/cross-cutting-concerns.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2,
+            "metrics-tracker.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "All 7 audits completed with documented findings",
+          "Fix list compiled and prioritized (CRITICAL/HIGH/MEDIUM/LOW)",
+          "All phases, roles, and cross-cutting concerns covered by at least one audit"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "json_validation"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "strict",
+          "verbosity": "detailed",
+          "stance": "critical"
+        }
+      },
+      "items": [
+        {
+          "title": "[Auditor] — Audit: Does the playbook satisfy all requirements?",
+          "owner": "[Auditor]",
+          "description": "For each requirement in research/requirements.md: Is it addressed by at least one task? Y/N. Is the task specific enough to satisfy the requirement? Y/N.",
+          "output": "audits/requirements-gap-analysis.md"
+        },
+        {
+          "title": "[Auditor] — Audit: Are all cross-cutting concerns woven throughout?",
+          "owner": "[Auditor]",
+          "description": "For each concern in research/cross-cutting-concerns.md: How many phases reference it? If < 3 phases: flagged as insufficiently woven.",
+          "output": "audits/cross-cutting-audit.md"
+        },
+        {
+          "title": "[Auditor] — Audit: Are there gaps between phases?",
+          "owner": "[Auditor]",
+          "description": "Walk through sequentially: Does Phase N's output fully satisfy Phase N+1's input needs? Y/N per transition. Is there work falling between phases? Y/N. Are there implicit tasks not written down? Y/N. Could a new user follow this playbook without asking questions? Y/N.",
+          "output": "audits/phase-gap-analysis.md"
+        },
+        {
+          "title": "[Auditor] — Audit: Are there contradictions?",
+          "owner": "[Auditor]",
+          "description": "Check for: Tasks contradicting strategic constraints Y/N. Tasks contradicting the implementation method guidance Y/N. Metrics targets contradicting each other Y/N. Description details conflicting across tasks Y/N.",
+          "output": "audits/contradiction-audit.md"
+        },
+        {
+          "title": "[Auditor] — Audit: Is every task assignable and completable?",
+          "owner": "[Auditor]",
+          "description": "For each task: Is the assigned role capable of this work? Y/N. Can the task be completed independently (or are dependencies explicit)? Y/N. Does the task have clear 'done' criteria? Y/N. Does the task require information that no previous task produces? Y/N.",
+          "output": "audits/task-completability-audit.md"
+        },
+        {
+          "title": "[Auditor] — Audit: Is the detail level appropriate?",
+          "owner": "[Auditor]",
+          "description": "Check calibration: Any simple tasks over-described? Y/N (list them). Any complex tasks under-described? Y/N (list them). Any implementation tasks missing method specification? Y/N. Any shared-resource tasks missing risk levels? Y/N. Would the least experienced target user understand every task? Y/N.",
+          "output": "audits/detail-level-audit.md"
+        },
+        {
+          "title": "[Auditor] — Audit: Is the KB specification buildable and integrity-safe?",
+          "owner": "[Auditor]",
+          "description": "Walk through knowledge_base section: Can an agent create the directory structure from the spec alone? Y/N. Can an agent create a valid KB entry from the schema alone? Y/N. Can an agent populate a bridge entry from the bridge schema alone? Y/N. Is the population strategy actionable? Y/N.\n\nLayer contamination checks (if multi-layer): Do technical layer entries contain subjective/creative language? Y/N (contamination if yes). Do creative/design layer entries contain code or implementation class names? Y/N. Does every bridge entry reference valid entries in both source KBs? Y/N. Do any bridge entries contradict each other? Y/N.",
+          "output": "audits/kb-buildability-audit.md"
+        },
+        {
+          "title": "[Auditor] — Compile audit findings into prioritized fix list",
+          "owner": "[Auditor]",
+          "description": "CRITICAL: contradictions, missing phases, broken dependencies. HIGH: cross-cutting gaps, incomplete descriptions, orphaned roles, unbuildable KB spec. MEDIUM: detail level issues, consistency problems. LOW: formatting, naming conventions, minor wording.",
+          "output": "audits/fix-list.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: All audits complete, fix list compiled",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "All 7 audits completed with documented findings",
+            "Fix list compiled and prioritized",
+            "All phases, roles, and cross-cutting concerns covered by at least one audit"
+          ],
+          "blocker_examples": [
+            "Requirements not covered — add tasks or clarify",
+            "Cross-cutting concern only in one phase — weave throughout",
+            "Phase gaps identified — add missing tasks"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "audits/requirements-gap-analysis.md",
+              "audits/cross-cutting-audit.md",
+              "audits/phase-gap-analysis.md",
+              "audits/contradiction-audit.md",
+              "audits/task-completability-audit.md",
+              "audits/detail-level-audit.md",
+              "audits/kb-buildability-audit.md",
+              "audits/fix-list.md"
+            ],
+            "next_phase_context": [
+              "audits/fix-list.md",
+              "drafts/playbook-v0.1.json"
+            ],
+            "excluded_files": [
+              "Individual audit reports — findings consolidated into fix-list.md. Only reference individual reports if a fix needs more context."
+            ],
+            "skill_validation": "none",
+            "metrics_snapshot": {
+              "collect": [
+                "MET-06"
+              ],
+              "record_in": "metrics-tracker.md"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 12: Quality Audit — Stress Testing",
+      "purpose": "Walk through the playbook under different scenarios to find issues that gap analysis misses.",
+      "compilation": {
+        "context_load": [
+          "audits/fix-list.md",
+          "drafts/playbook-v0.1.json",
+          "decisions-ledger.md",
+          "artifact-manifest.md",
+          "metrics-tracker.md"
+        ],
+        "role_mindset": "Auditor — adversarial thinking. Try to break the playbook by simulating real usage scenarios.",
+        "objective": "Walk through the playbook under happy path, domain novice, KB construction, blocker, variant, and edge case scenarios",
+        "pre_check": [
+          "All 7 gap analysis audits completed",
+          "fix list compiled and prioritized"
+        ],
+        "failure_modes_relevant": [
+          "FM-009",
+          "FM-010",
+          "FM-012",
+          "FM-023"
+        ],
+        "agent_config": {
+          "temperature": 0.25
+        },
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "audits/fix-list.md": 5,
+            "drafts/playbook-v0.1.json": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2,
+            "metrics-tracker.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "All scenario walkthroughs completed (happy path, novice, KB, blocker, variant, edge case)",
+          "All CRITICAL and HIGH issues fixed",
+          "MEDIUM issues fixed",
+          "JSON re-validated after fixes",
+          "Auditor verification passed — no regressions"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "file_editing",
+          "json_validation",
+          "script_execution"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "strict",
+          "verbosity": "comprehensive",
+          "stance": "adversarial"
+        }
+      },
+      "items": [
+        {
+          "title": "[Auditor] — Scenario walkthrough: Happy path",
+          "owner": "[Auditor]",
+          "description": "Execute the playbook mentally with no problems: Can you start Phase 0 with only information available at project start? Y/N. Does each phase's output give the next phase everything it needs? Y/N. At each gate, are conditions verifiable? Y/N. At the end, has the playbook produced everything required? Y/N.",
+          "output": "testing/scenario-happy-path.md"
+        },
+        {
+          "title": "[Auditor] — Scenario walkthrough: Domain novice",
+          "owner": "[Auditor]",
+          "description": "Walk through as someone who has NEVER done this type of work: Can they understand and complete their assigned tasks? Y/N. Do descriptions give enough context? Y/N. Are tools and methods explained? Y/N. Would they know what to do when stuck? Y/N.",
+          "output": "testing/scenario-domain-novice.md"
+        },
+        {
+          "title": "[Auditor] — Scenario walkthrough: KB construction by unfamiliar agent",
+          "owner": "[Auditor]",
+          "description": "Walk through KB specification as agent encountering domain for first time: Can you build directory structure from spec? Y/N. Can you create a valid entry from schema? Y/N. Can you populate a bridge entry from bridge schema? Y/N. Can you run a cross-reference lookup? Y/N.\n\nContamination test: write a sample entry for each layer and verify it naturally stays within its domain boundary.",
+          "output": "testing/scenario-kb-construction.md"
+        },
+        {
+          "title": "[Auditor] — Scenario walkthrough: Blocker scenarios",
+          "owner": "[Auditor]",
+          "description": "Simulate common blockers: What if access/tools are unavailable? What if the domain has unusual or undocumented aspects? What if QA fails at a phase gate? What if requirements change mid-execution? Does the playbook handle these? Are escalation paths clear?",
+          "output": "testing/scenario-blockers.md"
+        },
+        {
+          "title": "[Auditor] — Scenario walkthrough: Domain variants",
+          "owner": "[Auditor]",
+          "description": "If the playbook covers variants of the domain: Walk through with Variant A and Variant B. Do all tasks make sense for each variant?",
+          "output": "testing/scenario-variants.md"
+        },
+        {
+          "title": "[Auditor] — Edge case identification",
+          "owner": "[Auditor]",
+          "description": "Minimal case (smallest possible project) — does it still work? Maximal case (largest, most complex) — does it scale? Legacy case (old technology/process) — does it handle it? Migration case (moving from old to new) — is there a path?",
+          "output": "testing/edge-cases.md"
+        },
+        {
+          "title": "[Builder] — Fix all CRITICAL and HIGH issues from audit and stress testing",
+          "owner": "[Builder]",
+          "description": "Edit drafts/playbook-v0.1.json to resolve each issue in audits/fix-list.md marked CRITICAL or HIGH. After each fix, verify no new contradictions introduced. Re-run the validation script after all fixes."
+        },
+        {
+          "title": "[Builder] — Fix MEDIUM issues from audit and stress testing",
+          "owner": "[Builder]",
+          "description": "Edit drafts/playbook-v0.1.json to resolve remaining MEDIUM issues from audits/fix-list.md. Same process: fix, verify no regressions."
+        },
+        {
+          "title": "[Builder] — Re-validate JSON after all fixes",
+          "owner": "[Builder]",
+          "description": "Run the structural validation script. Verify JSON parses, all roles consistent, compilation blocks intact, handoff chains unbroken. Save validated output as drafts/playbook-v0.2.json.",
+          "output": "drafts/playbook-v0.2.json"
+        },
+        {
+          "title": "[Auditor] — Verify fixes don't introduce new issues",
+          "owner": "[Auditor]",
+          "description": "Spot-check that CRITICAL/HIGH fixes are clean — no new contradictions, no regressions. Verify fix-list.md entries are resolved, not just closed. If issues found: return to [Builder], then re-verify.",
+          "output": "audits/stress-test-verification.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Stress testing complete, fixes applied, Auditor verified",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "All scenario walkthroughs completed",
+            "Edge cases documented",
+            "All CRITICAL and HIGH issues fixed",
+            "MEDIUM issues fixed",
+            "JSON re-validated after fixes",
+            "[Auditor] verification passed — no regressions from fixes"
+          ],
+          "blocker_examples": [
+            "CRITICAL issues remain — fix before proceeding",
+            "Happy path fails at specific phase — diagnose and fix",
+            "Auditor found regression from fix — return to Builder"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "testing/scenario-happy-path.md",
+              "testing/scenario-domain-novice.md",
+              "testing/scenario-kb-construction.md",
+              "testing/scenario-blockers.md",
+              "testing/scenario-variants.md",
+              "testing/edge-cases.md",
+              "audits/stress-test-verification.md",
+              "drafts/playbook-v0.2.json"
+            ],
+            "next_phase_context": [
+              "drafts/playbook-v0.2.json",
+              "success-criteria.md",
+              "audits/fix-list.md (resolved status)"
+            ],
+            "excluded_files": [
+              "Scenario walkthrough details — issues extracted and fixed",
+              "Pre-fix JSON draft — superseded by v0.2"
+            ],
+            "skill_validation": "none",
+            "metrics_snapshot": {
+              "collect": [
+                "MET-06"
+              ],
+              "record_in": "metrics-tracker.md"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 13: Stakeholder Review & Iteration",
+      "purpose": "Final human review before pilot testing.",
+      "compilation": {
+        "context_load": [
+          "drafts/playbook-v0.2.json",
+          "success-criteria.md",
+          "audits/fix-list.md (resolved status)",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Stakeholder — business alignment, strategic review. Does this playbook achieve what was commissioned?",
+        "objective": "Human review of playbook against business strategy, roles, and success criteria. Specific feedback, then final approval.",
+        "pre_check": [
+          "All scenario walkthroughs completed",
+          "all CRITICAL/HIGH/MEDIUM issues fixed",
+          "JSON re-validated"
+        ],
+        "failure_modes_relevant": [],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "drafts/playbook-v0.2.json": 5,
+            "success-criteria.md": 5,
+            "audits/fix-list.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Playbook reviewed against business strategy and success criteria from Phase 0",
+          "Roles and ownership reviewed — no overloaded roles, decision authority correctly placed",
+          "All stakeholder feedback is specific and actionable",
+          "Builder implemented all feedback changes",
+          "JSON re-validated after changes",
+          "Auditor verified no regressions from changes"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_editing",
+          "json_validation",
+          "user_questioning"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "low",
+          "creativity_level": "conservative",
+          "verbosity": "comprehensive",
+          "stance": "critical"
+        }
+      },
+      "items": [
+        {
+          "title": "[Stakeholder] — Review playbook against business strategy",
+          "owner": "[Stakeholder]",
+          "description": "Does the playbook produce the right outcome? Are strategic constraints respected throughout? Are metrics aligned with business KPIs? Is the playbook parameterized properly (per-run variables, not hardcoded)? Would you trust this playbook to run without supervising every step?"
+        },
+        {
+          "title": "[Stakeholder] — Review roles and ownership",
+          "owner": "[Stakeholder]",
+          "description": "Roles match available capabilities. No role is overloaded. Decision authority is correctly placed. Coordination role has enough visibility."
+        },
+        {
+          "title": "[Stakeholder] — Provide feedback and change requests",
+          "owner": "[Stakeholder]",
+          "description": "Specific, actionable feedback: tasks to add, remove, or modify; description changes needed; phase structure changes; metric or target adjustments.\n\n'Make it better' is not feedback. Specific changes only.",
+          "output": "stakeholder-feedback.md"
+        },
+        {
+          "title": "[Builder] — Implement stakeholder feedback",
+          "owner": "[Builder]",
+          "description": "Edit drafts/playbook-v0.2.json per stakeholder-feedback.md. Apply each change, verify compilation blocks and handoff chains remain consistent."
+        },
+        {
+          "title": "[Builder] — Re-validate JSON after changes",
+          "owner": "[Builder]",
+          "description": "Run the structural validation script. Save validated output as drafts/playbook-v0.3.json.",
+          "output": "drafts/playbook-v0.3.json"
+        },
+        {
+          "title": "[Auditor] — Verify stakeholder changes don't introduce regressions",
+          "owner": "[Auditor]",
+          "description": "Spot-check that feedback implementation is clean — no new contradictions, no broken handoffs. Verify compilation blocks still consistent after any phase structure changes. If issues found: return to [Builder], then re-verify."
+        },
+        {
+          "title": "[Stakeholder] — Final approval of playbook",
+          "owner": "[Stakeholder]",
+          "description": "Satisfies success criteria from Phase 0. All feedback addressed. Business strategy respected throughout. Would you run this playbook tomorrow with confidence?"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Stakeholder approved, Auditor verified",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "All stakeholder feedback addressed",
+            "[Auditor] verification passed — no regressions from changes",
+            "Final approval given",
+            "JSON valid after changes",
+            "Success criteria from Phase 0 are satisfied"
+          ],
+          "blocker_examples": [
+            "Stakeholder says 'looks fine' without reviewing specific phases — not approval, need documented review",
+            "Feedback says 'add more detail to Phase 3' without specifying which tasks — not actionable, request specifics"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "drafts/playbook-v{latest}.json",
+              "stakeholder-feedback.md"
+            ],
+            "next_phase_context": [
+              "drafts/playbook-v{latest}.json"
+            ],
+            "excluded_files": [
+              "All feedback discussion — changes applied to JSON",
+              "Previous draft versions — superseded"
+            ],
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 14: Pilot / Structured Dry-Run",
+      "purpose": "Validate the playbook through structured dry-run scenarios. A real pilot run is preferred when practical; the structured dry-run protocol is the minimum requirement when real execution is impractical within the creation context.",
+      "compilation": {
+        "context_load": [
+          "drafts/playbook-v{latest}.json",
+          "decisions-ledger.md",
+          "artifact-manifest.md",
+          "metrics-tracker.md"
+        ],
+        "role_mindset": "Auditor — executing scenarios and documenting friction. Do not rationalize problems away.",
+        "objective": "Run structured dry-run for 2+ scenarios (or real pilot), document friction, incorporate feedback, get Auditor sign-off",
+        "pre_check": [
+          "All stakeholder feedback addressed",
+          "Final approval given",
+          "JSON valid",
+          "Success criteria from Phase 0 satisfied"
+        ],
+        "failure_modes_relevant": [
+          "FM-012"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "drafts/playbook-v{latest}.json": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2,
+            "metrics-tracker.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Structured dry-run completed for 2+ scenarios",
+          "Scenario walkthroughs documented with Y/N per task per scenario",
+          "Handoff chain traced and verified for all scenarios",
+          "Failure modes from dry-run cataloged with FM-IDs",
+          "Feedback incorporated and JSON re-validated",
+          "Auditor final verification passed"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "file_editing",
+          "json_validation",
+          "script_execution"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "low",
+          "creativity_level": "conservative",
+          "verbosity": "comprehensive",
+          "stance": "adversarial"
+        }
+      },
+      "items": [
+        {
+          "title": "[Coordinator] — Define dry-run scenario matrix",
+          "owner": "[Coordinator]",
+          "description": "Define 2-3 scenarios with concrete parameters:\n\n1. MINIMAL CASE: smallest possible project in this domain. Exercises the fewest tasks and conditional paths.\n2. TYPICAL CASE: representative mid-complexity project. Exercises the most common path.\n3. COMPLEX CASE (optional): high-complexity variant. Exercises conditional tasks, all KB layers, maximum dependency chains.\n\nFor each scenario: name, key parameters, expected phase count, expected task count, which conditional tasks should activate, which KB layers should be needed.",
+          "output": "testing/scenario-matrix.md"
+        },
+        {
+          "title": "[Auditor] — Phase-by-phase walkthrough for all scenarios",
+          "owner": "[Auditor]",
+          "description": "For each scenario in the matrix, walk through every phase:\n- Can each task be completed given this scenario's parameters? Y/N\n- What would the task produce for this scenario?\n- Are there any blockers, ambiguities, or missing information?\n- Does the gate make sense for this scenario?\n\nDocument findings per scenario per phase.",
+          "output": "testing/scenario-walkthroughs.md"
+        },
+        {
+          "title": "[Auditor] — Verify conditional task logic across scenarios",
+          "owner": "[Auditor]",
+          "description": "For each conditional task in the playbook:\n- Does the condition evaluate correctly for each scenario? Y/N\n- Are there scenarios where the condition is ambiguous? Y/N\n- Are there missing conditional tasks (tasks that should be conditional but aren't)? Y/N"
+        },
+        {
+          "title": "[Auditor] — Trace handoff chain for all scenarios",
+          "owner": "[Auditor]",
+          "description": "For each scenario, trace the full handoff chain from Phase 0 to final phase:\n- Does each phase's next_phase_context provide everything the next phase needs? Y/N per transition\n- Are there context_load items that no previous phase produces? Y/N\n- Does the context budget allow loading all critical files at every phase? Y/N\n\nThis is the most mechanical check — trace every file reference through the chain.",
+          "output": "testing/handoff-chain-trace.md"
+        },
+        {
+          "title": "[Auditor] — Document friction and catalog failure modes",
+          "owner": "[Auditor]",
+          "description": "Compile all findings from walkthroughs into:\n\n1. Friction log: questions that arose, ambiguities found, tasks that need more detail, tasks in wrong order, missing tasks.\n\n2. Failure mode catalog: for every issue discovered, create FM entry (symptom, root_cause, fix, prevention, phase, severity, source). Source should be 'dry-run-{scenario-name}'.",
+          "output": "testing/pilot-friction.md, testing/failure-modes-pilot.md"
+        },
+        {
+          "title": "[Builder] — Incorporate feedback into playbook",
+          "owner": "[Builder]",
+          "description": "Common updates: clarifying descriptions, reordering tasks, adjusting scope, fixing gate conditions, updating KB spec based on dry-run findings. Add new failure modes to failure_modes[] array. Update failure_modes_relevant in affected phase compilation blocks."
+        },
+        {
+          "title": "[Builder] — Re-validate and produce final JSON",
+          "owner": "[Builder]",
+          "description": "Run the structural validation script. Save validated output as final/playbook-v1.0.json.",
+          "output": "final/playbook-v1.0.json"
+        },
+        {
+          "title": "[Auditor] — Final verification before handoff",
+          "owner": "[Auditor]",
+          "description": "The Auditor is always the last role to touch the playbook before it leaves the creator process.\n\nVerify: all dry-run fixes are clean — no new contradictions. JSON still validates. KB specification still buildable after updates. No regression from earlier audit fixes. Gate conditions accurate after task modifications.\n\nIf issues found: return to [Builder] for fixes, then re-verify. Do not advance.",
+          "output": "audits/final-verification.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Dry-run complete, feedback incorporated, Auditor verified",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "Structured dry-run completed for 2+ scenarios OR pilot run completed on a real project",
+            "Scenario walkthroughs documented with Y/N per task per scenario",
+            "Handoff chain traced and verified for all scenarios",
+            "Friction documented",
+            "Failure modes from dry-run cataloged (or 'none found' documented)",
+            "Feedback incorporated into playbook",
+            "Updated JSON validated",
+            "[Auditor] final verification passed — no regressions, no new contradictions"
+          ],
+          "blocker_examples": [
+            "Only 1 scenario tested — minimum 2 required for meaningful coverage",
+            "Handoff chain trace found broken links — fix before proceeding",
+            "Auditor found regression from dry-run fixes — return to Builder",
+            "Failure modes from dry-run not cataloged with FM-IDs — format properly before proceeding"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "final/playbook-v1.0.json",
+              "testing/scenario-matrix.md",
+              "testing/scenario-walkthroughs.md",
+              "testing/handoff-chain-trace.md",
+              "testing/pilot-friction.md",
+              "testing/failure-modes-pilot.md",
+              "audits/final-verification.md"
+            ],
+            "next_phase_context": [
+              "final/playbook-v1.0.json"
+            ],
+            "excluded_files": [
+              "All dry-run execution artifacts — findings captured in friction log and failure modes, applied to JSON",
+              "Previous draft versions"
+            ],
+            "metrics_snapshot": {
+              "collect": [
+                "MET-07",
+                "MET-08"
+              ],
+              "record_in": "metrics-tracker.md"
+            },
+            "skill_validation": "none"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 15: Documentation & Version Control",
+      "purpose": "Package the final playbook with supporting documentation.",
+      "compilation": {
+        "context_load": [
+          "final/playbook-v1.0.json",
+          "decisions-ledger.md",
+          "artifact-manifest.md",
+          "metrics-tracker.md"
+        ],
+        "role_mindset": "Coordinator — packaging and archiving. Completeness and clarity for future users.",
+        "objective": "Create changelog, archive research/audit docs, store production JSON, write quick-start guide",
+        "pre_check": [
+          "Pilot completed",
+          "friction documented",
+          "feedback incorporated",
+          "Auditor final verification passed"
+        ],
+        "failure_modes_relevant": [],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "final/playbook-v1.0.json": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2,
+            "metrics-tracker.md": 1
+          }
+        },
+        "skill_preparation": "none",
+        "success_criteria": [
+          "Changelog written with all version history entries",
+          "Research and audit documents archived",
+          "Production JSON stored in designated location with backup",
+          "Quick-start guide covers prerequisites, how to start, roles, and phase overview"
+        ],
+        "tools_available": [
+          "file_reading",
+          "file_creation",
+          "file_editing"
+        ],
+        "behavioral_profile": {
+          "risk_tolerance": "minimal",
+          "creativity_level": "strict",
+          "verbosity": "detailed",
+          "stance": "neutral"
+        }
+      },
+      "items": [
+        {
+          "title": "[Coordinator] — Create playbook changelog",
+          "owner": "[Coordinator]",
+          "description": "Version history with dates and change summaries: v0.1 (initial draft), v0.2 (post-audit fixes), v0.3 (post-stakeholder feedback), v1.0 (post-pilot, production ready).",
+          "output": "final/CHANGELOG.md"
+        },
+        {
+          "title": "[Coordinator] — Archive all research and audit documents",
+          "owner": "[Coordinator]",
+          "description": "Preserve: research/, architecture/, audits/, testing/. These are the 'why' behind design decisions."
+        },
+        {
+          "title": "[Builder] — Store production playbook JSON",
+          "owner": "[Builder]",
+          "description": "Final JSON in designated location. Naming: {playbook-name}-playbook.json. Never overwrite without backup of previous version."
+        },
+        {
+          "title": "[Coordinator] — Create quick-start guide",
+          "owner": "[Coordinator]",
+          "description": "One-page guide: what this playbook is for, prerequisites before starting, how to start a run, key roles, phase overview (one line per phase), where to find documentation.",
+          "output": "final/QUICKSTART.md"
+        },
+        {
+          "title": "[Coordinator] — Compile final metrics report",
+          "owner": "[Coordinator]",
+          "description": "Read metrics-tracker.md. For each metric: compare final value against target from the metrics[] array. Produce a summary table:\n\n| Metric | Target | Actual | Status |\n\nStatus: PASS (met target), MISS (below target), N/A (no target defined).\n\nInclude brief analysis: which metrics indicate process health, which indicate output quality, what to improve in the next run.",
+          "output": "final/metrics-report.md"
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Documentation complete",
+          "owner": "[Coordinator]",
+          "gate_conditions": [
+            "Changelog written",
+            "Research and audit docs archived",
+            "JSON in version control",
+            "Quick-start guide complete"
+          ],
+          "blocker_examples": [
+            "Changelog missing version history — document all versions",
+            "Quick-start guide missing prerequisites — add before finalizing"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "final/CHANGELOG.md",
+              "final/QUICKSTART.md",
+              "final/playbook-v1.0.json"
+            ],
+            "next_phase_context": [
+              "final/playbook-v1.0.json",
+              "final/QUICKSTART.md"
+            ],
+            "excluded_files": [
+              "All creation process artifacts — archived for reference, not needed for ongoing use"
+            ],
+            "skill_validation": "none",
+            "metrics_snapshot": {
+              "collect": [
+                "MET-05"
+              ],
+              "record_in": "metrics-tracker.md"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Phase 16: Continuous Improvement",
+      "purpose": "After each completed run of the output playbook, review and optionally improve it. Manual and human-initiated — no automatic feedback loops.",
+      "compilation": {
+        "context_load": [
+          "final/playbook-v1.0.json (or latest version)",
+          "final/QUICKSTART.md",
+          "decisions-ledger.md",
+          "artifact-manifest.md"
+        ],
+        "role_mindset": "Stakeholder — reviewing execution data, deciding what to change",
+        "objective": "After each playbook run, collect review data, catalog failure modes, decide whether to update the playbook",
+        "pre_check": [
+          "At least one run of the output playbook has been completed"
+        ],
+        "failure_modes_relevant": [
+          "FM-017"
+        ],
+        "agent_config": {},
+        "system_prompt_auto": {
+          "role_definition": true,
+          "phase_objective": true,
+          "failure_modes": true,
+          "pre_check_guidance": true,
+          "context_files": true,
+          "handoff_requirements": true
+        },
+        "context_budget": {
+          "max_tokens": 64000,
+          "priority": {
+            "final/playbook-v1.0.json": 5,
+            "final/QUICKSTART.md": 5,
+            "decisions-ledger.md": 1,
+            "artifact-manifest.md": 2
+          }
+        },
+        "skill_preparation": "none"
+      },
+      "items": [
+        {
+          "title": "[Coordinator] — After each playbook run: collect review data",
+          "owner": "[Coordinator]",
+          "description": "Review the post-run assessment (using the post_run_review structure from Output Configuration). Compare actual metrics to targets. Note tasks consistently skipped, reordered, or added ad-hoc. Note where the KB spec was insufficient during construction."
+        },
+        {
+          "title": "[Coordinator] — Catalog failure modes from this run",
+          "owner": "[Coordinator]",
+          "description": "For every bug, crash, unexpected behavior, or degraded result encountered during the run: create a failure mode entry (id: FM-NNN sequential, symptom, root_cause, fix, prevention, phase, severity, source).\n\nseverity: crash (process cannot continue), error (wrong output), degraded (works but quality reduced), cosmetic (visual/formatting).\nprevention: write as a concrete checklist item or gate condition.\nphase: assign to the output playbook phase where this should be prevented or detected.\n\nAdd entries to failure_modes[] array. Update relevant phase compilation blocks with new FM-IDs."
+        },
+        {
+          "title": "[Stakeholder] — Decide whether to update the playbook",
+          "owner": "[Stakeholder]",
+          "description": "Review collected data and new failure modes. Decide: update now, update later, or no changes needed. If updating: specify what changes to make and why. This is a human decision — the agent does not auto-modify the playbook."
+        },
+        {
+          "title": "[Builder] — Implement playbook updates",
+          "owner": "[Builder]",
+          "conditional": "Only if Stakeholder approved updates",
+          "description": "Follow same quality standards: validate JSON, check structural completeness, verify no introduced contradictions. Integrate failure mode prevention items into relevant phase tasks or gate conditions. Update changelog."
+        },
+        {
+          "title": "[Coordinator] — Phase gate: Improvement cycle complete",
+          "owner": "[Coordinator]",
+          "description": "Validate that the improvement cycle has been executed: run data collected, failure modes cataloged, and any approved updates implemented and re-validated.",
+          "gate_conditions": [
+            "Run review data collected and documented",
+            "New failure modes cataloged with FM-IDs (or 'none found' documented)",
+            "Stakeholder decision on updates is recorded in decisions-ledger.md",
+            "If updates approved: changes implemented and JSON re-validated"
+          ],
+          "blocker_examples": [
+            "Run data says 'no issues' but pilot-friction.md from Phase 12 listed unresolved items — review data is incomplete",
+            "New failure modes described in prose but not formatted with FM-ID, severity, and prevention fields"
+          ],
+          "handoff": {
+            "output_artifacts": [
+              "decisions-ledger.md (updated)",
+              "artifact-manifest.md (updated)"
+            ],
+            "next_phase_context": [],
+            "excluded_files": [
+              "Improvement cycle details — captured in decisions-ledger.md"
+            ],
+            "skill_validation": "none"
+          }
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "id": "MET-01",
+      "title": "Total Phases",
+      "description": "Phases in the produced playbook",
+      "type": "metric_integer",
+      "category": "output_quality",
+      "target": null,
+      "measurement_method": "Count checklists[] array length"
+    },
+    {
+      "id": "MET-02",
+      "title": "Total Tasks",
+      "description": "Tasks across all phases in the produced playbook",
+      "type": "metric_integer",
+      "category": "output_quality",
+      "target": null,
+      "measurement_method": "Count all items[] across checklists"
+    },
+    {
+      "id": "MET-03",
+      "title": "Tasks With Descriptions",
+      "description": "Percentage of tasks that have descriptions",
+      "type": "metric_integer",
+      "category": "output_quality",
+      "target": 70,
+      "measurement_method": "(tasks with description / total tasks) x 100 — reported as integer percentage"
+    },
+    {
+      "id": "MET-04",
+      "title": "Metrics Defined",
+      "description": "KPI metrics defined in the produced playbook (never zero)",
+      "type": "metric_integer",
+      "category": "output_quality",
+      "target": 6,
+      "measurement_method": "Count metrics[] array length"
+    },
+    {
+      "id": "MET-05",
+      "title": "Days to Complete",
+      "description": "Calendar days from commission (Phase 0) to documentation (Phase 15)",
+      "type": "metric_integer",
+      "category": "process",
+      "target": 10,
+      "measurement_method": "Calendar days between Phase 0 start and Phase 15 gate"
+    },
+    {
+      "id": "MET-06",
+      "title": "Audit Issues Found",
+      "description": "Total issues found during quality audit phases (lower = better initial drafting)",
+      "type": "metric_integer",
+      "category": "process",
+      "target": null,
+      "measurement_method": "Count entries in audits/fix-list.md"
+    },
+    {
+      "id": "MET-07",
+      "title": "Critical Issues at Pilot",
+      "description": "Issues discovered during pilot/dry-run that should have been caught earlier",
+      "type": "metric_integer",
+      "category": "process",
+      "target": 0,
+      "measurement_method": "Count issues in testing/pilot-friction.md and testing/failure-modes-pilot.md rated critical/high"
+    },
+    {
+      "id": "MET-08",
+      "title": "Pilot Completion Rate",
+      "description": "Percentage of tasks in the pilot/dry-run completed as written (no ad-hoc modifications)",
+      "type": "metric_integer",
+      "category": "domain_outcome",
+      "target": 90,
+      "measurement_method": "(tasks completed as-written / total tasks attempted) x 100 — reported as integer percentage"
+    }
+  ],
+  "usage_instructions": {
+    "how_to_run": [
+      "Load this playbook as context for a planning session",
+      "A single agent fills all roles — switch mental context per phase",
+      "Work through phases sequentially — each phase gate must pass before the next",
+      "For each task: read the title and description, complete the work, verify completion",
+      "At phase gates: verify all conditions are met, collect metrics_snapshot if present, then proceed",
+      "Final output: a domain-specific playbook JSON following output-schema.json"
+    ],
+    "session_strategy": [
+      "Phases 0-1: Share a session (scoping and research are tightly coupled)",
+      "Phases 2-3 (KB Architecture + Bootstrapping): Share a session — design then build",
+      "Phase 4 (Process Architecture): Fresh session with new eyes on structure",
+      "Phases 5-6 (Role + Task Engineering): Share a session — roles inform task writing",
+      "Phases 7-8 (Output Config + Metrics): Share a session",
+      "Phase 9 (JSON Assembly): Dedicated session — heaviest context load",
+      "Phase 10 (JSON Validation): Fresh session — validate with fresh eyes",
+      "Phases 11-12 (Gap Analysis + Stress Testing): Share a session — audit pair",
+      "Phase 13 (Stakeholder Review): Human review gate — break session here",
+      "Phase 14 (Pilot / Dry-Run): Dedicated session",
+      "Phases 15-16 (Documentation + Improvement): Complete the cycle"
+    ],
+    "cost_optimization": [
+      "Use compilation blocks — only load what the phase needs",
+      "Respect excluded_context — don't re-load what was deliberately dropped",
+      "For large playbooks: break JSON Assembly into multiple sessions (assemble, then validate)",
+      "Audit phases benefit from fresh context — don't carry forward build-phase thinking"
+    ],
+    "post_run_review": {
+      "assess": [
+        "What went well in the process",
+        "What didn't go well",
+        "What should change in the playbook",
+        "Metrics: target vs actual for every defined metric",
+        "Quality assessment: were gates effective, were tasks clear, were roles right",
+        "Catalog any failure modes encountered during the run"
+      ]
+    }
+  },
+  "failure_modes": [
+    {
+      "id": "FM-001",
+      "symptom": "KB architecture designed in Phase 2 but no directory, placeholders, or entries exist after creation completes",
+      "root_cause": "No phase executes the KB blueprint — Phase 2 designs it, but building was out of scope",
+      "fix": "Execute Phase 3 (KB Bootstrapping) to create directory tree, seed placeholders, harvest initial entries",
+      "prevention": "Phase 3 gate verifies KB directory exists with populated entries before advancing",
+      "phase": "Phase 2: KB Architecture",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-002",
+      "symptom": "Cross-cutting concern appears in only 1-2 phases despite 3+ minimum requirement",
+      "root_cause": "Weaving instruction is vague — 'must appear in 3+ phases' without specifying enforcement method",
+      "fix": "Check each CCC's phases_applied array, add enforcement to additional phases until minimum_phases met",
+      "prevention": "CCC objects have enforcement_method and phases_applied fields; Phase 10 validates count >= minimum_phases",
+      "phase": "Phase 6: Task Engineering",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-003",
+      "symptom": "Task title uses [Human] but owner field says 'human' — role validation fails",
+      "root_cause": "Inconsistent bracket syntax between title and owner field during manual JSON assembly",
+      "fix": "Normalize all owner fields to bracket syntax matching title: owner must be '[Role]' not 'Role' or 'role'",
+      "prevention": "Validation script checks owner field matches [Role] in title exactly",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-004",
+      "symptom": "KB layers defined as JSON array instead of named keys — agents cannot look up layers by name",
+      "root_cause": "Entry schema says 'layers' but doesn't specify whether it's an array or object",
+      "fix": "Restructure layers as named keys in the knowledge_base object, or as array of objects with required 'name' field",
+      "prevention": "KB schema validation task explicitly checks layer structure format",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-005",
+      "symptom": "Failure mode entries missing required fields (title or description) — FM references are broken",
+      "root_cause": "FM entry schema not enforced during manual assembly",
+      "fix": "Add all required fields to each FM entry: id, symptom, root_cause, fix, prevention, phase, severity, source",
+      "prevention": "Validation script checks all 8 required FM fields, FM-ID pattern, and no duplicates",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-006",
+      "symptom": "Metrics missing ID fields — cannot cross-reference from tasks or gates",
+      "root_cause": "Metric schema did not require an ID field",
+      "fix": "Assign sequential MET-NNN IDs to all metrics",
+      "prevention": "Validation script checks metric ID uniqueness and MET-NNN format for v3+ playbooks",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-007",
+      "symptom": "Cross-cutting concerns stored as plain strings — no enforcement metadata, no tracking of where they're applied",
+      "root_cause": "CCC schema only required a description string, not structured enforcement data",
+      "fix": "Convert each CCC string to object with id, title, description, enforcement_method, enforcement_rule, minimum_phases, phases_applied",
+      "prevention": "Validation script checks CCC object structure, phases_applied count >= minimum_phases",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-008",
+      "symptom": "Phase N+1 context_load references file not in Phase N's next_phase_context — handoff chain gap",
+      "root_cause": "Handoff blocks assembled manually without systematic chain verification",
+      "fix": "Trace full handoff chain and add missing files to next_phase_context or remove from context_load",
+      "prevention": "Validation script checks handoff chain consistency (check 16); dry-run protocol traces chains for all scenarios",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-009",
+      "symptom": "Gate handoff skill_validation field references wrong phase's skill — 10 mismatches found",
+      "root_cause": "Gates were copied between phases and skill field not updated",
+      "fix": "Audit every gate's skill_validation against the phase it hands off TO, not the current phase",
+      "prevention": "Stress testing scenario traces skill activation chain; validation script checks skill_activation consistency",
+      "phase": "Phase 12: Quality Audit — Stress Testing",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-010",
+      "symptom": "KB layer directories missing from context_load — 12 directories not loadable",
+      "root_cause": "KB directories referenced in phase_kb_mapping but not in compilation block context_load",
+      "fix": "Add all referenced KB directories to relevant phase context_load arrays",
+      "prevention": "Validation script cross-checks phase_kb_mapping against context_load; stress test verifies KB access per phase",
+      "phase": "Phase 12: Quality Audit — Stress Testing",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-011",
+      "symptom": "All 13+ context_load files at priority 5 — budget system cannot make intelligent loading decisions",
+      "root_cause": "Priorities assigned uniformly without considering which files are core vs reference-only",
+      "fix": "Differentiate priorities: 5 for core inputs, 4 for section-specific, 3 for reference, 1-2 for persistent tracking files",
+      "prevention": "Phase 9 and 10 split into assembly (heavy context) and validation (light context); priorities differentiated per file importance",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-012",
+      "symptom": "Pilot testing is a mental walkthrough, not real execution — misses runtime issues",
+      "root_cause": "Real pilot requires multiple sessions outside the creation context, which is impractical",
+      "fix": "Use structured dry-run protocol with scenario matrix, phase-by-phase walkthrough, handoff chain trace",
+      "prevention": "Phase 14 gate accepts either structured dry-run (2+ scenarios) OR real pilot; dry-run protocol is systematic and documented",
+      "phase": "Phase 14: Pilot / Structured Dry-Run",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-013",
+      "symptom": "Task description says 'build X' without method, specs, or verification — task is unexecutable",
+      "root_cause": "Task granularity standard not enforced during task writing",
+      "fix": "Add WHAT/HOW/SPECS/VERIFY structure to all non-obvious task descriptions",
+      "prevention": "Auditor review in Phase 6 uses binary checklist: does each description answer what, how, and how to verify?",
+      "phase": "Phase 6: Task Engineering",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-014",
+      "symptom": "4-layer bridged KB designed for a domain that could use a flat folder — massive over-engineering",
+      "root_cause": "No complexity assessment before KB design; defaults to maximum complexity",
+      "fix": "Re-evaluate using Phase 2 Task 1 complexity questions; switch to flat if warranted",
+      "prevention": "Phase 0 complexity classifier sets knowledge dimension; Phase 2 gate guardrail_checks flag mismatches",
+      "phase": "Phase 2: KB Architecture",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-015",
+      "symptom": "Playbook scope covers all variants (effects + instruments + synthesizers) instead of common case with conditionals",
+      "root_cause": "Scope definition didn't distinguish primary path from variant paths",
+      "fix": "Define primary scope (common case), mark variant-specific tasks as conditional",
+      "prevention": "Phase 0 scope task explicitly requires primary/variant distinction; complexity classifier informs scope breadth",
+      "phase": "Phase 0: Commission & Scoping",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-016",
+      "symptom": "Metrics defined with targets but never measured during execution — metrics are decorative",
+      "root_cause": "No measurement task in gates, no tracking file, no collection mechanism",
+      "fix": "Add metrics_snapshot to gate handoff blocks; initialize metrics-tracker.md in Phase 0",
+      "prevention": "metrics_snapshot.collect lists metric IDs to record at each gate; metrics-tracker.md persists across sessions",
+      "phase": "Phase 8: Metrics & KPI Definition",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-017",
+      "symptom": "failure_modes array empty after first execution — no guidance when things go wrong",
+      "root_cause": "Cold start problem: v1.0 playbooks have no execution history to draw failure modes from",
+      "fix": "Seed failure_modes with entries from first execution; update failure_modes_relevant in affected phases",
+      "prevention": "v3 creator ships with 20 seeded FMs from JUCE execution; Phase 16 catalogs new FMs from each run",
+      "phase": "Phase 16: Continuous Improvement",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-018",
+      "symptom": "Phase N requires Phase M's output but Phase M requires Phase N's — circular dependency",
+      "root_cause": "Dependency map not validated for cycles during process architecture",
+      "fix": "Break the cycle by reordering phases or splitting the shared dependency into a prerequisite phase",
+      "prevention": "Phase 4 dependency mapping task requires DAG proof (no circular dependencies); validated in architecture review",
+      "phase": "Phase 4: Process Architecture",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-019",
+      "symptom": "project-state.json referenced in tasks and gate handoffs but never created by any task",
+      "root_cause": "File referenced before a creation task was written for it",
+      "fix": "Add initialization task or remove all references",
+      "prevention": "Artifact provenance validation (check 17) catches files in context_load not produced by any prior phase",
+      "phase": "Phase 9: JSON Assembly",
+      "severity": "error",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-020",
+      "symptom": "Context compaction at session boundary loses critical details — decisions and rationale silently dropped",
+      "root_cause": "Session strategy doesn't account for LLM context window compaction behavior",
+      "fix": "Ensure all critical decisions are persisted in decisions-ledger.md before session breaks",
+      "prevention": "Session strategy aligns breaks to phase gates where decisions-ledger is updated; context_preservation rules enforce persistence",
+      "phase": "Phase 7: Output Configuration",
+      "severity": "degraded",
+      "source": "juce-vst-playbook-v0.1-execution"
+    },
+    {
+      "id": "FM-021",
+      "symptom": "success_criteria contradicts gate_conditions — agent works toward targets that the gate doesn't verify, or gate checks things not in success criteria",
+      "root_cause": "success_criteria and gate_conditions authored independently without cross-checking",
+      "fix": "Review each success_criteria entry against gate_conditions — every criterion should map to at least one gate condition",
+      "prevention": "Cross-validation check 19 warns when success_criteria count and gate_conditions count diverge significantly (ratio < 0.3 or > 3.0)",
+      "phase": "Phase 10: JSON Validation & Consistency",
+      "severity": "degraded",
+      "source": "compilation-system-audit-2026-04"
+    },
+    {
+      "id": "FM-022",
+      "symptom": "tools_available too restrictive — agent cannot perform required tasks because a needed capability is not listed",
+      "root_cause": "tools_available authored without checking what capabilities each task actually requires",
+      "fix": "Walk through each task description and verify the tools_available list covers all required capabilities",
+      "prevention": "Phase 10 validation audits tools_available against task descriptions — flag tasks that imply capabilities not in the list",
+      "phase": "Phase 10: JSON Validation & Consistency",
+      "severity": "degraded",
+      "source": "compilation-system-audit-2026-04"
+    },
+    {
+      "id": "FM-023",
+      "symptom": "tools_available too permissive — lists capabilities not needed by the phase, defeating role bleed prevention",
+      "root_cause": "tools_available copied from another phase without trimming to actual needs",
+      "fix": "Remove capabilities not required by any task in the phase",
+      "prevention": "Phase 12 stress testing verifies each tools_available entry is actually used by at least one task in the phase",
+      "phase": "Phase 12: Quality Audit — Stress Testing",
+      "severity": "degraded",
+      "source": "compilation-system-audit-2026-04"
+    },
+    {
+      "id": "FM-024",
+      "symptom": "behavioral_profile mismatch — phase has adversarial stance but tasks require constructive building, or supportive stance on an audit phase",
+      "root_cause": "behavioral_profile authored based on role name rather than actual phase activities",
+      "fix": "Review behavioral_profile against phase purpose and task types — stance must match the work being done",
+      "prevention": "Phase 10 validation cross-checks behavioral_profile.stance against role_mindset role name (Auditor phases should not be supportive, Builder phases should not be adversarial)",
+      "phase": "Phase 10: JSON Validation & Consistency",
+      "severity": "degraded",
+      "source": "compilation-system-audit-2026-04"
+    },
+    {
+      "id": "FM-025",
+      "symptom": "Orphaned success_criteria — criteria exist but phase has no gate_conditions to verify them, so success is declared without checking",
+      "root_cause": "success_criteria added to compilation block but gate task not updated to match",
+      "fix": "Add corresponding gate_conditions for each success_criteria entry, or remove criteria that are not verifiable",
+      "prevention": "Cross-validation check 19 catches phases where success_criteria exists but gate_conditions is empty or missing",
+      "phase": "Phase 10: JSON Validation & Consistency",
+      "severity": "error",
+      "source": "compilation-system-audit-2026-04"
+    }
+  ],
+  "phase_kb_mapping": {
+    "phase_0": [],
+    "phase_1": [],
+    "phase_2": [],
+    "phase_3": [],
+    "phase_4": [],
+    "phase_5": [],
+    "phase_6": [],
+    "phase_7": [],
+    "phase_8": [],
+    "phase_9": [],
+    "phase_10": [],
+    "phase_11": [],
+    "phase_12": [],
+    "phase_13": [],
+    "phase_14": [],
+    "phase_15": [],
+    "phase_16": []
+  },
+  "skill_activation": {
+    "phase_0": "none",
+    "phase_1": "none",
+    "phase_2": "none",
+    "phase_3": "none",
+    "phase_4": "none",
+    "phase_5": "none",
+    "phase_6": "none",
+    "phase_7": "none",
+    "phase_8": "none",
+    "phase_9": "none",
+    "phase_10": "none",
+    "phase_11": "none",
+    "phase_12": "none",
+    "phase_13": "none",
+    "phase_14": "none",
+    "phase_15": "none",
+    "phase_16": "none"
+  },
+  "router": {
+    "description": "The playbook creator is a sequential process — the router is trivial. Start at Phase 0 and proceed through each phase in order.",
+    "decision_tree": [
+      "New playbook commission → Start at Phase 0",
+      "Resume interrupted run → Check artifact-manifest.md for latest phase, resume there",
+      "Post-run improvement → Go directly to Phase 14"
+    ],
+    "default": "Start at Phase 0 with a commission brief"
+  },
+  "context_preservation": {
+    "decisions_ledger": "decisions-ledger.md — append-only, one paragraph per phase gate: phase number, key decisions, constraints discovered, rejected alternatives with brief rationale",
+    "artifact_manifest": "artifact-manifest.md — running index of every file: path, producing phase, status (active|superseded|archived), one-line summary",
+    "metrics_tracker": "metrics-tracker.md — running log of metric values collected at phase gates. Columns: Metric ID | Phase | Value | Target | Date",
+    "rules": [
+      "All three files are initialized in Phase 0 and updated at relevant gates",
+      "decisions-ledger.md and artifact-manifest.md are always included in context_load — exempt from token optimization cuts",
+      "metrics-tracker.md is included in context_load only for phases whose gates collect metrics",
+      "At session breaks, verify all three files are saved and current before ending",
+      "If context compaction occurs mid-session, these files serve as ground truth for recovering state"
+    ]
+  }
+}
