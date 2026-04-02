@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
-"""Structural validator for playbook-creator-playbook.json.
+"""Structural validator for playbook JSON files.
 
 Checks: JSON syntax, required top-level fields, type/enum validation,
 checklist structure, [Role] consistency, compilation blocks, handoff blocks,
 owner fields, scope/usage/KB structure, metrics completeness, phase count
 consistency, handoff chain consistency, artifact provenance.
+
+Optional: jsonschema validation against templates/output-schema.json.
+
+Usage:
+    python3 scripts/validate_playbook.py <playbook.json>
+    python3 scripts/validate_playbook.py <playbook.json> --schema templates/output-schema.json
+    python3 scripts/validate_playbook.py --help
 """
+import argparse
 import json
 import re
 import sys
 from pathlib import Path
+from typing import Tuple, List
 
 # Add scripts path for compilation module imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -28,7 +37,7 @@ REQUIRED_COMPILATION = [
 ]
 
 REQUIRED_HANDOFF = [
-    "output_artifacts", "next_phase_context"  # excluded_context and skill deprecated
+    "output_artifacts", "next_phase_context"
 ]
 
 VALID_CONTEXT_UPDATE_ACTIONS = {"append", "update", "create"}
@@ -50,7 +59,6 @@ VALID_ENFORCEMENT_METHODS = {
     "checklist_items", "gate_condition", "compilation_precheck", "task_description"
 }
 
-# New validation constants for compilation block enhancements
 VALID_CRITICAL_THRESHOLDS = range(1, 11)  # 1-10
 
 # Behavioral profile valid values
@@ -60,7 +68,29 @@ VALID_VERBOSITY = {"minimal", "concise", "detailed", "comprehensive"}
 VALID_STANCE = {"supportive", "neutral", "critical", "adversarial"}
 
 
-def validate_context_budget_feasibility(data: dict, errors: list):
+def _normalize_role(role: str) -> str:
+    """Normalize a role name for comparison: strip whitespace."""
+    return role.strip()
+
+
+def _roles_match(role_a: str, role_b: str) -> bool:
+    """Case-insensitive, whitespace-tolerant role comparison."""
+    return _normalize_role(role_a).lower() == _normalize_role(role_b).lower()
+
+
+def _find_role_in_defined(role: str, defined_roles: set) -> str | None:
+    """Find the canonical form of a role in defined_roles (case-insensitive).
+    Returns the canonical name or None if not found."""
+    norm = _normalize_role(role).lower()
+    for defined in defined_roles:
+        if defined.lower() == norm:
+            return defined
+    return None
+
+
+def validate_context_budget_feasibility(
+    data: dict, errors: list, warnings: list
+):
     """Check that context_load sizes are realistic for configured budget."""
     defaults = data.get("defaults", {})
     budget = defaults.get("context_budget_tokens", 64000)
@@ -77,12 +107,9 @@ def validate_context_budget_feasibility(data: dict, errors: list):
         phase_title = phase.get("title", f"Phase {i}")
 
         if not ctx_load:
-            continue  # Skip empty context_load
+            continue
 
-        # Estimate total tokens needed
         estimated_tokens = estimate_context_tokens(ctx_load)
-
-        # Check critical files fit
         priority = ctx_budget.get("priority", {})
         critical_tokens = estimate_critical_tokens(ctx_load, priority, threshold)
 
@@ -93,21 +120,56 @@ def validate_context_budget_feasibility(data: dict, errors: list):
             )
 
         if estimated_tokens > available_for_files * 1.5:
-            errors.append(
+            warnings.append(
                 f"{phase_title}: context_load ({estimated_tokens} tokens estimated) "
-                f"may significantly exceed budget ({available_for_files} available) (warning)"
+                f"may significantly exceed budget ({available_for_files} available)"
             )
 
 
-def validate(path: str) -> list[str]:
+def validate_schema(data: dict, schema_path: str) -> Tuple[List[str], List[str]]:
+    """Validate playbook against JSON Schema. Returns (errors, warnings)."""
     errors = []
+    warnings = []
+    try:
+        import jsonschema
+    except ImportError:
+        warnings.append(
+            "jsonschema not installed — skipping schema validation. "
+            "Install with: pip install jsonschema"
+        )
+        return errors, warnings
+
+    try:
+        schema = json.loads(Path(schema_path).read_text())
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        errors.append(f"Cannot load schema '{schema_path}': {e}")
+        return errors, warnings
+
+    validator = jsonschema.Draft7Validator(schema)
+    for error in sorted(validator.iter_errors(data), key=lambda e: list(e.path)):
+        path = ".".join(str(p) for p in error.absolute_path) or "(root)"
+        errors.append(f"Schema: {path}: {error.message}")
+
+    return errors, warnings
+
+
+def validate(path: str, schema_path: str = None) -> Tuple[List[str], List[str]]:
+    """Validate a playbook file. Returns (errors, warnings) as separate lists."""
+    errors = []
+    warnings = []
 
     # 1. JSON syntax
     try:
         with open(path) as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
-        return [f"JSON parse error: {e}"]
+        return [f"JSON parse error: {e}"], []
+
+    # 1b. Optional jsonschema validation
+    if schema_path:
+        schema_errors, schema_warnings = validate_schema(data, schema_path)
+        errors.extend(schema_errors)
+        warnings.extend(schema_warnings)
 
     # 2. Required top-level fields
     for field in REQUIRED_TOP_LEVEL:
@@ -115,7 +177,7 @@ def validate(path: str) -> list[str]:
             errors.append(f"Missing top-level field: {field}")
 
     if errors:
-        return errors  # Can't continue without structure
+        return errors, warnings  # Can't continue without structure
 
     # 2b. Type and enum checks on top-level fields
     if not isinstance(data.get("version"), int) or data["version"] < 1:
@@ -131,41 +193,34 @@ def validate(path: str) -> list[str]:
         if not isinstance(defaults, dict):
             errors.append("defaults must be an object")
         else:
-            # Validate model
             if "model" in defaults and not isinstance(defaults["model"], str):
                 errors.append("defaults.model must be a string")
 
-            # Validate temperature
             if "temperature" in defaults:
                 temp = defaults["temperature"]
                 if not isinstance(temp, (int, float)) or temp < 0 or temp > 2:
                     errors.append("defaults.temperature must be a number between 0 and 2")
 
-            # Validate max_tokens
             if "max_tokens" in defaults:
                 mt = defaults["max_tokens"]
                 if not isinstance(mt, int) or mt < 256:
                     errors.append("defaults.max_tokens must be an integer >= 256")
 
-            # Validate context_budget_tokens
             if "context_budget_tokens" in defaults:
                 cbt = defaults["context_budget_tokens"]
                 if not isinstance(cbt, int) or cbt < 1000:
                     errors.append("defaults.context_budget_tokens must be an integer >= 1000")
 
-            # Validate system_prompt_budget
             if "system_prompt_budget" in defaults:
                 spb = defaults["system_prompt_budget"]
                 if not isinstance(spb, int) or spb < 500:
                     errors.append("defaults.system_prompt_budget must be an integer >= 500")
 
-            # Validate critical_priority_threshold
             if "critical_priority_threshold" in defaults:
                 cpt = defaults["critical_priority_threshold"]
                 if not isinstance(cpt, int) or cpt < 1 or cpt > 10:
                     errors.append("defaults.critical_priority_threshold must be an integer between 1 and 10")
 
-            # Validate model_fallbacks
             if "model_fallbacks" in defaults:
                 mf = defaults["model_fallbacks"]
                 if not isinstance(mf, dict):
@@ -186,14 +241,11 @@ def validate(path: str) -> list[str]:
     # 3b. Role format validation (string or object)
     for role_name, role_def in roles_data.items():
         if isinstance(role_def, str):
-            # String format - backward compatible, no validation needed
-            pass
+            pass  # String format - backward compatible
         elif isinstance(role_def, dict):
-            # Object format - validate structure
             if "description" not in role_def:
                 errors.append(f"Role '{role_name}' object missing 'description'")
 
-            # Validate nested defaults
             if "defaults" in role_def:
                 role_defaults = role_def["defaults"]
                 if not isinstance(role_defaults, dict):
@@ -205,7 +257,6 @@ def validate(path: str) -> list[str]:
                     if "temperature" in role_defaults:
                         temp = role_defaults["temperature"]
                         if isinstance(temp, list):
-                            # Temperature range format
                             if len(temp) != 2:
                                 errors.append(f"Role '{role_name}' temperature range must have 2 elements")
                             elif not all(isinstance(t, (int, float)) for t in temp):
@@ -217,12 +268,10 @@ def validate(path: str) -> list[str]:
                         elif temp < 0 or temp > 2:
                             errors.append(f"Role '{role_name}' temperature must be between 0 and 2")
 
-            # Validate role_context
             if "role_context" in role_def:
                 if not isinstance(role_def["role_context"], str):
                     errors.append(f"Role '{role_name}' role_context must be a string")
 
-            # Validate agent_assignment
             if "agent_assignment" in role_def:
                 if not isinstance(role_def["agent_assignment"], str):
                     errors.append(f"Role '{role_name}' agent_assignment must be a string")
@@ -230,7 +279,7 @@ def validate(path: str) -> list[str]:
             errors.append(f"Role '{role_name}' must be a string or object")
 
     # 4. Checklists structure
-    role_usage: dict[str, int] = {}
+    role_usage: dict[str, int] = {}  # canonical role name -> count
     checklists = data.get("checklists", [])
 
     if not checklists:
@@ -301,21 +350,18 @@ def validate(path: str) -> list[str]:
                         if not isinstance(mt, int) or mt < 1000:
                             errors.append(f"{phase_label}: context_budget.max_tokens must be >= 1000")
 
-                    # Validate priority mapping
                     priority = ctx_budget.get("priority", {})
                     if priority:
                         if not isinstance(priority, dict):
                             errors.append(f"{phase_label}: context_budget.priority must be an object")
                         else:
-                            # Normalize context_load by stripping annotations
                             ctx_load_files = set()
                             for item in comp.get("context_load", []):
                                 base = re.split(r"\s*\(", item)[0].strip()
                                 ctx_load_files.add(base)
                             for filename, prio_val in priority.items():
                                 if not isinstance(prio_val, int) or prio_val < 1 or prio_val > 10:
-                                    errors.append(f"{phase_label}: priority for '{filename}' must be 1-10")
-                                # FIX: Check that priority files exist in context_load
+                                    errors.append(f"{phase_label}: priority for '{filename}' must be integer 1-10")
                                 prio_base = re.split(r"\s*\(", filename)[0].strip()
                                 if prio_base not in ctx_load_files:
                                     errors.append(f"{phase_label}: priority file '{filename}' not in context_load")
@@ -379,18 +425,27 @@ def validate(path: str) -> list[str]:
                 errors.append(f"{item_label}: missing title")
                 continue
 
-            # [Role] extraction
+            # [Role] extraction — normalized matching
             role_match = re.match(r"\[([^\]]+)\]", title)
             if not role_match:
                 errors.append(f"{item_label}: title doesn't start with [Role]: {title[:50]}")
             else:
-                role = role_match.group(1)
-                role_usage[role] = role_usage.get(role, 0) + 1
+                role_raw = role_match.group(1)
+                canonical = _find_role_in_defined(role_raw, defined_roles)
+                if canonical:
+                    role_usage[canonical] = role_usage.get(canonical, 0) + 1
+                else:
+                    # Track as-is for the undefined-role error below
+                    role_usage[role_raw] = role_usage.get(role_raw, 0) + 1
 
-                # Owner consistency
+                # Owner consistency — normalized
                 owner = item.get("owner", "")
-                if owner and owner != f"[{role}]":
-                    errors.append(f"{item_label}: owner '{owner}' doesn't match [Role] '{role}'")
+                owner_match = re.match(r"\[([^\]]+)\]", owner)
+                if owner and owner_match:
+                    if not _roles_match(role_raw, owner_match.group(1)):
+                        errors.append(f"{item_label}: owner '{owner}' doesn't match title role '[{role_raw}]'")
+                elif owner and not owner_match:
+                    errors.append(f"{item_label}: owner '{owner}' should use [Role] format")
 
             # Gate detection
             if "gate_conditions" in item:
@@ -399,7 +454,6 @@ def validate(path: str) -> list[str]:
                     errors.append(f"{item_label}: gate_conditions must be array")
                 if "blocker_examples" not in item:
                     errors.append(f"{item_label}: gate missing blocker_examples")
-                # Validate guardrail_checks (optional)
                 if "guardrail_checks" in item:
                     gc = item["guardrail_checks"]
                     if not isinstance(gc, list):
@@ -415,7 +469,6 @@ def validate(path: str) -> list[str]:
                         if field not in handoff:
                             errors.append(f"{item_label}: handoff missing '{field}'")
 
-                    # Validate new handoff fields
                     if "excluded_files" in handoff:
                         ef = handoff["excluded_files"]
                         if not isinstance(ef, list):
@@ -423,7 +476,6 @@ def validate(path: str) -> list[str]:
                         elif not all(isinstance(f, str) for f in ef):
                             errors.append(f"{item_label}: excluded_files must contain strings")
 
-                    # Validate context_update
                     if "context_update" in handoff:
                         cu = handoff["context_update"]
                         if not isinstance(cu, dict):
@@ -433,21 +485,18 @@ def validate(path: str) -> list[str]:
                                 if action not in VALID_CONTEXT_UPDATE_ACTIONS:
                                     errors.append(f"{item_label}: context_update['{fname}'] action '{action}' not in {VALID_CONTEXT_UPDATE_ACTIONS}")
 
-                    # Validate skill_validation
                     if "skill_validation" in handoff:
                         sv = handoff["skill_validation"]
                         if not isinstance(sv, str):
                             errors.append(f"{item_label}: skill_validation must be a string")
 
-                    # Deprecation warning for excluded_context
+                    # Deprecation warnings (proper warnings, not errors)
                     if "excluded_context" in handoff:
-                        errors.append(f"{item_label}: excluded_context is deprecated, use excluded_files (warning)")
+                        warnings.append(f"{item_label}: excluded_context is deprecated, use excluded_files")
 
-                    # Deprecation warning for skill
                     if "skill" in handoff:
-                        errors.append(f"{item_label}: skill is deprecated, use skill_validation (warning)")
+                        warnings.append(f"{item_label}: skill is deprecated, use skill_validation")
 
-                    # Validate metrics_snapshot
                     if "metrics_snapshot" in handoff:
                         ms = handoff["metrics_snapshot"]
                         if not isinstance(ms, dict):
@@ -462,7 +511,6 @@ def validate(path: str) -> list[str]:
                             elif not isinstance(ms["record_in"], str):
                                 errors.append(f"{item_label}: metrics_snapshot.record_in must be a string")
 
-                    # Validate kb_status
                     if "kb_status" in handoff:
                         ks = handoff["kb_status"]
                         if not isinstance(ks, dict):
@@ -472,16 +520,15 @@ def validate(path: str) -> list[str]:
                                 if field in ks and not isinstance(ks[field], int):
                                     errors.append(f"{item_label}: kb_status.{field} must be an integer")
 
-        # Phase 14 has no gate (documented exception)
         if not has_gate and i < len(checklists) - 1:
             errors.append(f"{phase_label}: no gate task found")
 
-    # 5. Role consistency
+    # 5. Role consistency — using normalized matching
     for role, count in role_usage.items():
-        if role not in defined_roles:
+        if not _find_role_in_defined(role, defined_roles):
             errors.append(f"Role [{role}] used in tasks but not defined in roles{{}}")
         if count < 3:
-            errors.append(f"Role [{role}] appears only {count} time(s) (minimum 3)")
+            warnings.append(f"Role [{role}] appears only {count} time(s) (minimum 3 recommended)")
 
     for role in defined_roles:
         if role not in role_usage:
@@ -501,7 +548,7 @@ def validate(path: str) -> list[str]:
     fm = data.get("failure_modes", None)
     if fm is None:
         errors.append("failure_modes field missing")
-    elif fm:  # Non-empty — validate entries
+    elif fm:
         fm_ids = set()
         for entry in fm:
             for field in ("id", "symptom", "root_cause", "fix", "prevention", "phase", "severity", "source"):
@@ -511,7 +558,10 @@ def validate(path: str) -> list[str]:
                 errors.append(f"failure_mode {entry.get('id')}: invalid severity '{entry['severity']}'")
             fid = entry.get("id")
             if fid and not FM_ID_PATTERN.match(fid):
-                errors.append(f"failure_mode '{fid}': id doesn't match pattern FM-NNN")
+                errors.append(
+                    f"failure_mode '{fid}': id must match FM-NNN format "
+                    f"(three digits, e.g., FM-001, FM-025)"
+                )
             if fid in fm_ids:
                 errors.append(f"Duplicate FM-ID: {fid}")
             fm_ids.add(fid)
@@ -569,12 +619,17 @@ def validate(path: str) -> list[str]:
         mid = m.get("id")
         if mid:
             if not MET_ID_PATTERN.match(mid):
-                errors.append(f"metric '{m.get('title', '?')}': id '{mid}' doesn't match MET-NN")
+                errors.append(
+                    f"metric '{m.get('title', '?')}': id '{mid}' must match MET-NN format "
+                    f"(two digits, e.g., MET-01, MET-12)"
+                )
             if mid in met_ids:
                 errors.append(f"Duplicate MET-ID: {mid}")
             met_ids.add(mid)
         elif version >= 3:
-            errors.append(f"metric '{m.get('title', '?')}': missing id (required for version >= 3)")
+            errors.append(
+                f"metric '{m.get('title', '?')}': missing id (required for version >= 3, format: MET-NN)"
+            )
 
     # 13c. Validate metrics_snapshot references
     for i, phase in enumerate(checklists):
@@ -594,7 +649,7 @@ def validate(path: str) -> list[str]:
         ccc_ids = set()
         for idx, item in enumerate(ccc):
             if isinstance(item, str):
-                continue  # Backward compatible string format
+                continue
             elif isinstance(item, dict):
                 for req_field in ("id", "title", "description", "enforcement_method", "minimum_phases"):
                     if req_field not in item:
@@ -602,7 +657,10 @@ def validate(path: str) -> list[str]:
                 ccc_id = item.get("id", "")
                 if ccc_id:
                     if not CCC_ID_PATTERN.match(ccc_id):
-                        errors.append(f"cross_cutting_concerns[{idx}]: id '{ccc_id}' doesn't match CCC-NN")
+                        errors.append(
+                            f"cross_cutting_concerns[{idx}]: id '{ccc_id}' must match CCC-NN format "
+                            f"(two digits, e.g., CCC-01)"
+                        )
                     if ccc_id in ccc_ids:
                         errors.append(f"Duplicate CCC-ID: {ccc_id}")
                     ccc_ids.add(ccc_id)
@@ -628,8 +686,6 @@ def validate(path: str) -> list[str]:
         errors.append(f"skill_activation has {len(data.get('skill_activation', {}))} keys, expected {num_phases}")
 
     # 16. Handoff chain consistency
-    # Verify each phase's context_load matches previous phase's next_phase_context
-    # (persistent files are implicitly included)
     persistent = {"decisions-ledger", "artifact-manifest", "metrics-tracker"}
     for i in range(1, len(checklists)):
         prev = checklists[i - 1]
@@ -637,37 +693,30 @@ def validate(path: str) -> list[str]:
         prev_label = prev.get("title", f"checklist[{i-1}]")
         curr_label = curr.get("title", f"checklist[{i}]")
 
-        # Get previous phase's next_phase_context from its gate handoff
         prev_next = set()
         for item in prev.get("items", []):
             handoff = item.get("handoff", {})
             if "next_phase_context" in handoff:
                 for f in handoff["next_phase_context"]:
-                    # Normalize: strip annotations like "(full)", "(summary — ...)"
                     base = re.split(r"\s*\(", f)[0].strip().lower()
                     prev_next.add(base)
 
         if not prev_next:
-            continue  # No handoff found — already flagged by gate check
+            continue
 
-        # Get current phase's context_load
         curr_comp = curr.get("compilation", {})
         curr_ctx = curr_comp.get("context_load", [])
         for f in curr_ctx:
             base = re.split(r"\s*\(", f)[0].strip().lower()
-            # Skip persistent files (implicitly included)
             if any(p in base for p in persistent):
                 continue
-            # Check if this file was in the previous phase's next_phase_context
             if base not in prev_next:
-                errors.append(
+                warnings.append(
                     f"{curr_label}: context_load has '{f}' not in {prev_label} next_phase_context"
                 )
 
     # 17. Artifact provenance
-    # Verify context_load items were produced by some prior phase's output_artifacts
     all_artifacts: set[str] = set()
-    # Phase 0 context_load is allowed to reference external inputs (commission brief)
     for i, phase in enumerate(checklists):
         phase_label = phase.get("title", f"checklist[{i}]")
 
@@ -678,17 +727,15 @@ def validate(path: str) -> list[str]:
                 if any(p in base for p in persistent):
                     continue
                 if base not in all_artifacts:
-                    errors.append(
-                        f"{phase_label}: context_load has '{f}' not in any prior output_artifacts (warning)"
+                    warnings.append(
+                        f"{phase_label}: context_load has '{f}' not in any prior output_artifacts"
                     )
 
-        # Collect this phase's output_artifacts
         for item in phase.get("items", []):
             handoff = item.get("handoff", {})
             for a in handoff.get("output_artifacts", []):
                 base = re.split(r"\s*\(", a)[0].strip().lower()
                 all_artifacts.add(base)
-        # Also count items with "output" field
         for item in phase.get("items", []):
             out = item.get("output", "")
             if out:
@@ -697,7 +744,7 @@ def validate(path: str) -> list[str]:
                     all_artifacts.add(base)
 
     # 18. Context budget feasibility check
-    validate_context_budget_feasibility(data, errors)
+    validate_context_budget_feasibility(data, errors, warnings)
 
     # 19. Success criteria / gate_conditions cross-validation
     for i, phase in enumerate(checklists):
@@ -707,7 +754,6 @@ def validate(path: str) -> list[str]:
         if not success_criteria:
             continue
 
-        # Find gate_conditions in this phase
         gate_conditions = []
         for item in phase.get("items", []):
             if "gate_conditions" in item:
@@ -715,41 +761,63 @@ def validate(path: str) -> list[str]:
                 break
 
         if gate_conditions and success_criteria:
-            # Warn if success_criteria count differs significantly from gate_conditions
             sc_count = len(success_criteria)
             gc_count = len(gate_conditions)
             if sc_count > 0 and gc_count > 0:
                 ratio = sc_count / gc_count if gc_count > 0 else 0
                 if ratio < 0.3 or ratio > 3.0:
-                    errors.append(
+                    warnings.append(
                         f"{phase_label}: success_criteria ({sc_count} items) differs significantly "
-                        f"from gate_conditions ({gc_count} items) — verify alignment (warning)"
+                        f"from gate_conditions ({gc_count} items) — verify alignment"
                     )
 
-    return errors
+    return errors, warnings
 
 
-if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else "playbook-creator-playbook.json"
+def main():
+    parser = argparse.ArgumentParser(
+        description="Validate a playbook JSON file for structural correctness.",
+        epilog="Examples:\n"
+               "  python3 scripts/validate_playbook.py my-playbook.json\n"
+               "  python3 scripts/validate_playbook.py my-playbook.json --schema templates/output-schema.json\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "playbook",
+        nargs="?",
+        default="playbook-creator-playbook.json",
+        help="Path to the playbook JSON file (default: playbook-creator-playbook.json)",
+    )
+    parser.add_argument(
+        "--schema",
+        default=None,
+        help="Path to JSON Schema file to validate against (e.g., templates/output-schema.json)",
+    )
+    args = parser.parse_args()
+
+    path = args.playbook
     if not Path(path).exists():
         print(f"File not found: {path}")
         sys.exit(1)
 
-    errors = validate(path)
-    warnings = [e for e in errors if "(warning)" in e]
-    hard_errors = [e for e in errors if "(warning)" not in e]
-    if hard_errors:
-        print(f"FAIL: {len(hard_errors)} error(s), {len(warnings)} warning(s)")
-        for e in hard_errors:
-            print(f"  - {e}")
+    errors, warnings = validate(path, schema_path=args.schema)
+
+    if errors:
+        print(f"FAIL: {len(errors)} error(s), {len(warnings)} warning(s)")
+        for e in errors:
+            print(f"  ERROR: {e}")
         for w in warnings:
-            print(f"  - {w}")
+            print(f"  WARN: {w}")
         sys.exit(1)
     elif warnings:
         print(f"PASS with {len(warnings)} warning(s)")
         for w in warnings:
-            print(f"  - {w}")
+            print(f"  WARN: {w}")
         sys.exit(0)
     else:
         print("PASS: All structural checks passed")
         sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

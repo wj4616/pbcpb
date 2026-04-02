@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
-"""Semantic validation for playbook logical consistency."""
+"""Semantic validation for playbook logical consistency.
 
+Checks: role_mindset references, failure mode phase references,
+phase ordering conventions, complexity profile validation.
+
+Usage:
+    python3 scripts/validate_semantic.py <playbook.json>
+    python3 scripts/validate_semantic.py --help
+"""
+
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -13,13 +22,10 @@ def extract_role_name(role_mindset: str) -> str:
 
     Handles both em-dash (—) and regular dash (-) separators.
     """
-    # Try em-dash first
     if " — " in role_mindset:
         return role_mindset.split(" — ")[0].strip()
-    # Try regular dash
     if " - " in role_mindset:
         return role_mindset.split(" - ")[0].strip()
-    # No separator, return as-is
     return role_mindset.strip()
 
 
@@ -33,9 +39,9 @@ def validate_semantic(playbook: dict) -> Tuple[List[str], List[str]]:
     errors = []
     warnings = []
 
-    # 1. Role mindset references existing role
+    # 1. Role mindset references existing role (case-insensitive)
     roles = playbook.get("roles", {})
-    defined_roles = set(roles.keys())
+    defined_roles_lower = {r.lower(): r for r in roles.keys()}
 
     for i, phase in enumerate(playbook.get("checklists", [])):
         comp = phase.get("compilation", {})
@@ -47,7 +53,7 @@ def validate_semantic(playbook: dict) -> Tuple[List[str], List[str]]:
 
         role_name = extract_role_name(role_mindset)
 
-        if role_name and role_name not in defined_roles:
+        if role_name and role_name.lower() not in defined_roles_lower:
             errors.append(
                 f"{phase_title}: role_mindset '{role_mindset}' references undefined role '{role_name}'"
             )
@@ -94,13 +100,26 @@ def validate_semantic(playbook: dict) -> Tuple[List[str], List[str]]:
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: validate_semantic.py <playbook.json>")
+    parser = argparse.ArgumentParser(
+        description="Validate semantic consistency of a playbook JSON file.",
+        epilog="Examples:\n"
+               "  python3 scripts/validate_semantic.py my-playbook.json\n",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "playbook",
+        nargs="?",
+        default="playbook-creator-playbook.json",
+        help="Path to the playbook JSON file (default: playbook-creator-playbook.json)",
+    )
+    args = parser.parse_args()
+
+    path = args.playbook
+    if not Path(path).exists():
+        print(f"File not found: {path}")
         sys.exit(1)
 
-    path = sys.argv[1]
     playbook = json.loads(Path(path).read_text())
-
     errors, warnings = validate_semantic(playbook)
 
     if errors:

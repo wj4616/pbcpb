@@ -394,7 +394,7 @@ def test_validation_catches_new_errors():
         temp_path = f.name
 
     try:
-        errors = validate(temp_path)
+        errors, warnings = validate(temp_path)
         assert len(errors) > 0, "Should catch validation errors"
 
         # Check for specific errors
@@ -474,39 +474,38 @@ def test_compilation_new_fields_validation():
             json.dump(pb, f)
             temp_path = f.name
         try:
-            return validate(temp_path)
+            errors, warnings = validate(temp_path)
+            return errors, warnings
         finally:
             Path(temp_path).unlink()
 
     # Test 1: Valid success_criteria passes
     pb = make_playbook({"success_criteria": ["JSON valid", "Fields present"]})
-    errors = validate_playbook(pb)
-    hard_errors = [e for e in errors if "(warning)" not in e]
-    assert not any("success_criteria" in e for e in hard_errors), \
-        f"Valid success_criteria should pass: {hard_errors}"
+    errors, warnings = validate_playbook(pb)
+    assert not any("success_criteria" in e for e in errors), \
+        f"Valid success_criteria should pass: {errors}"
 
     # Test 2: Empty success_criteria fails
     pb = make_playbook({"success_criteria": []})
-    errors = validate_playbook(pb)
+    errors, warnings = validate_playbook(pb)
     assert any("success_criteria must not be empty" in e for e in errors), \
         f"Empty success_criteria should fail: {errors}"
 
     # Test 3: Non-string success_criteria fails
     pb = make_playbook({"success_criteria": [123, "valid"]})
-    errors = validate_playbook(pb)
+    errors, warnings = validate_playbook(pb)
     assert any("success_criteria must contain strings" in e for e in errors), \
         f"Non-string success_criteria should fail: {errors}"
 
     # Test 4: Valid tools_available passes
     pb = make_playbook({"tools_available": ["web_search", "file_reading"]})
-    errors = validate_playbook(pb)
-    hard_errors = [e for e in errors if "(warning)" not in e]
-    assert not any("tools_available" in e for e in hard_errors), \
-        f"Valid tools_available should pass: {hard_errors}"
+    errors, warnings = validate_playbook(pb)
+    assert not any("tools_available" in e for e in errors), \
+        f"Valid tools_available should pass: {errors}"
 
     # Test 5: Empty tools_available fails
     pb = make_playbook({"tools_available": []})
-    errors = validate_playbook(pb)
+    errors, warnings = validate_playbook(pb)
     assert any("tools_available must not be empty" in e for e in errors), \
         f"Empty tools_available should fail: {errors}"
 
@@ -519,16 +518,15 @@ def test_compilation_new_fields_validation():
             "stance": "adversarial"
         }
     })
-    errors = validate_playbook(pb)
-    hard_errors = [e for e in errors if "(warning)" not in e]
-    assert not any("behavioral_profile" in e for e in hard_errors), \
-        f"Valid behavioral_profile should pass: {hard_errors}"
+    errors, warnings = validate_playbook(pb)
+    assert not any("behavioral_profile" in e for e in errors), \
+        f"Valid behavioral_profile should pass: {errors}"
 
     # Test 7: Invalid behavioral_profile value fails
     pb = make_playbook({
         "behavioral_profile": {"risk_tolerance": "yolo"}
     })
-    errors = validate_playbook(pb)
+    errors, warnings = validate_playbook(pb)
     assert any("risk_tolerance" in e and "yolo" in e for e in errors), \
         f"Invalid risk_tolerance should fail: {errors}"
 
@@ -536,17 +534,16 @@ def test_compilation_new_fields_validation():
     pb = make_playbook({
         "behavioral_profile": {"stance": "passive-aggressive"}
     })
-    errors = validate_playbook(pb)
+    errors, warnings = validate_playbook(pb)
     assert any("stance" in e for e in errors), \
         f"Invalid stance should fail: {errors}"
 
     # Test 9: No new fields still passes (backward compat)
     pb = make_playbook({})
-    errors = validate_playbook(pb)
-    hard_errors = [e for e in errors if "(warning)" not in e]
+    errors, warnings = validate_playbook(pb)
     assert not any("success_criteria" in e or "tools_available" in e or "behavioral_profile" in e
-                   for e in hard_errors), \
-        f"Missing optional fields should not fail: {hard_errors}"
+                   for e in errors), \
+        f"Missing optional fields should not fail: {errors}"
 
     print("PASS: test_compilation_new_fields_validation")
 
@@ -616,8 +613,7 @@ def test_success_criteria_gate_alignment_warning():
         temp_path = f.name
 
     try:
-        errors = validate(temp_path)
-        warnings = [e for e in errors if "(warning)" in e]
+        errors, warnings = validate(temp_path)
         assert any("success_criteria" in w and "differs significantly" in w for w in warnings), \
             f"Should warn about mismatched criteria: {warnings}"
     finally:
