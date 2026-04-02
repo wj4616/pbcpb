@@ -219,6 +219,17 @@
         9,
         12
       ]
+    },
+    {
+      "id": "CCC-CONFIG",
+      "title": "Path Configuration Compliance",
+      "description": "All file operations use configured paths from Phase 0. No hardcoded external paths.",
+      "enforcement_method": "gate_check",
+      "enforcement_rule": "Every phase that reads external files must reference paths from scope.md configuration section.",
+      "minimum_phases": 1,
+      "phases_applied": [
+        "Phase 0"
+      ]
     }
   ],
   "knowledge_base": {
