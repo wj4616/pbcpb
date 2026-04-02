@@ -360,6 +360,7 @@
           "owner": "[Coordinator]",
           "description": "Produce a GATE VERIFICATION block: list each condition below with explicit PASS or FAIL and a one-line evidence citation (file path or content reference). No condition may be marked PASS without evidence. A single FAIL blocks advancement to Phase 1.",
           "gate_conditions": [
+            "Configuration established (output location + external data decisions documented in scope.md)",
             "Purpose statement is one paragraph with no ambiguity",
             "Scope has explicit in/out/adjacent lists",
             "Success criteria are measurable, not subjective",
@@ -371,6 +372,7 @@
             "Session boundaries planned and documented"
           ],
           "blocker_examples": [
+            "scope.md missing configuration section — ask user for output location and external data permissions before proceeding",
             "Purpose statement says 'improve the process' without specifying which process or what improvement looks like \u2014 too vague, rewrite",
             "Scope has no out-of-scope list \u2014 everything is implicitly in scope, which means scope creep is guaranteed",
             "Success criteria say 'playbook is good' \u2014 not measurable, define what 'good' means quantitatively"
