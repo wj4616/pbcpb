@@ -1803,19 +1803,50 @@
           "creativity_level": "strict",
           "verbosity": "concise",
           "stance": "neutral"
+        },
+        "size_guidance": {
+          "expected_lines": "400-1500 lines depending on domain complexity",
+          "timeout_risk": "Write tool has ~60 second timeout for large content",
+          "chunking_strategy": "Write structure first (title through roles), then use Edit to append sections. Never write >500 lines in single Write call.",
+          "estimation_formula": "200 + (phases × 50) + (CCCs × 15) + (FMs × 10) + (metrics × 10) + 100"
         }
       },
       "items": [
         {
-          "title": "[Builder] \u2014 Assemble the playbook JSON structure",
+          "title": "[Builder] \u2014 Estimate JSON size",
           "owner": "[Builder]",
-          "description": "MINIMUM EXECUTABLE PLAYBOOK STRUCTURE:\n\nRequired 16 top-level fields: title, version, description, workflow_model, roles, scope, cross_cutting_concerns, knowledge_base, checklists, metrics, usage_instructions, failure_modes, phase_kb_mapping, skill_activation, router, context_preservation.\n\nPer-checklist: title, purpose, compilation block (context_load, role_mindset, objective, pre_check, failure_modes_relevant), items array with tasks and gate.\n\nEXECUTION: Assemble the JSON in sections \u2014 do NOT attempt to produce the entire file in one response. Follow this order:\n\n1. First response: Create the JSON file with top-level fields (title through defaults), roles{}, scope{}, cross_cutting_concerns[], and knowledge_base{}.\n2. Second response: Add checklists[] \u2014 write Phase 0 and Phase 1 complete with compilation blocks, tasks, and gates.\n3. Continue adding 2-3 phases per response until all phases are in checklists[].\n4. Final response: Add metrics[], usage_instructions{}, failure_modes[], phase_kb_mapping{}, skill_activation{}, router{}, context_preservation{}. Close the JSON.\n\nAfter each response, verify the file is valid JSON so far (or note where it will be closed). Use drafts/task-list-v0.1.md and all architecture documents as source material.\n\nSave progressive output to drafts/playbook-v0.1.json.",
-          "output": "drafts/playbook-v0.1.json"
+          "description": "Calculate estimated line count before writing to determine if chunked writing is required.\n\nESTIMATION FORMULA:\n- Base structure: ~200 lines (title, version, description, workflow_model, defaults, roles, scope)\n- Each phase (checklist): ~50 lines (title, purpose, compilation, items, gate)\n- Cross-cutting concerns: ~15 lines each\n- Failure modes: ~10 lines each\n- Metrics: ~10 lines each\n- Usage instructions: ~50 lines\n\nTotal = 200 + (phases × 50) + (CCCs × 15) + (FMs × 10) + (metrics × 10) + 100\n\nIf estimated total > 500 lines, use chunked writing strategy.\n\nOutput: One line in size-estimate.md: 'estimated_lines: N'",
+          "output": "size-estimate.md"
+        },
+        {
+          "title": "[Builder] \u2014 Write JSON header and structure",
+          "owner": "[Builder]",
+          "description": "Write the top-level JSON structure using the Write tool. Include: title, version, description, phase_summary, workflow_model, defaults, knowledge_base, roles.\n\nCRITICAL: Write tool has ~60 second timeout. For outputs >500 lines estimated, this task writes ONLY the header/structure. Use Edit tool for subsequent sections.\n\nOUTPUT FORMAT:\n```json\n{\n  \"title\": \"...\",\n  \"version\": N,\n  \"description\": \"...\",\n  \"phase_summary\": [...],\n  \"workflow_model\": \"...\",\n  \"defaults\": {...},\n  \"knowledge_base\": {...},\n  \"roles\": {...}\n}\n```\n\nDo NOT close the JSON yet. Leave it open for subsequent sections.",
+          "output": "playbook.json (structure only, open)"
+        },
+        {
+          "title": "[Builder] \u2014 Append cross_cutting_concerns and failure_modes",
+          "owner": "[Builder]",
+          "description": "Use Edit tool to append cross_cutting_concerns array and failure_modes array after the roles section.\n\nEach CCC must have: id, title, description, enforcement_method, enforcement_rule, minimum_phases, phases_applied.\nEach FM must have: id, symptom, root_cause, fix, prevention, phase, severity, source.\n\nEXECUTION: Single Edit call to append both sections. Keep each section under 200 lines.",
+          "output": "playbook.json (with CCCs and FMs)"
+        },
+        {
+          "title": "[Builder] \u2014 Append checklists (phases array)",
+          "owner": "[Builder]",
+          "description": "Use Edit tool to append the checklists array containing all phases.\n\nEach phase must have: title, purpose, compilation block (context_load, role_mindset, objective, pre_check, failure_modes_relevant), items array with tasks, and gate task.\n\nCHUNKING: If checklists array is >300 lines, append in 2-3 Edit calls:\n1. Append checklists opening and first half of phases\n2. Append remaining phases\n3. Close the checklists array",
+          "output": "playbook.json (with phases)"
+        },
+        {
+          "title": "[Builder] \u2014 Append metrics, usage_instructions, and remaining sections",
+          "owner": "[Builder]",
+          "description": "Use Edit tool to append: metrics array, usage_instructions object, phase_kb_mapping object, skill_activation object, router object, context_preservation object, then close the JSON.\n\nEach metric must have: id, title, description, type, category, target, measurement_method.\n\nClose the JSON with proper bracket nesting.",
+          "output": "playbook.json (complete)"
         },
         {
           "title": "[Builder] \u2014 Validate JSON syntax",
           "owner": "[Builder]",
-          "description": "Parse without errors. No trailing commas, unescaped characters, mismatched brackets. All string values properly escaped.\n\nVerification: python3 -c \"import json; json.load(open('drafts/playbook-v0.1.json'))\""
+          "description": "Parse without errors. No trailing commas, unescaped characters, mismatched brackets. All string values properly escaped.\n\nVerification: python3 -c \"import json; json.load(open('playbook.json'))\"\n\nIf validation fails, return to writing tasks to fix syntax.",
+          "output": "Validated playbook.json"
         },
         {
           "title": "[Auditor] \u2014 Validate assembled JSON structure and cross-references",
@@ -1962,17 +1993,32 @@
           "description": "Read through the playbook as a user would: Do tasks flow logically within each phase? Are descriptions consistent in tone and detail level? Would you know how to complete every task from title + description alone? Are metrics measurable with the tools/access defined?\n\nEXECUTION: Review one phase at a time. Start with Phase 0, note any issues, then Phase 1, and so on. After reviewing all phases, review the non-checklist sections (metrics, failure_modes, roles, usage_instructions). Compile all findings into a single review document. Do not attempt to review the entire playbook in a single response."
         },
         {
+          "title": "[Auditor] \u2014 Verify CCC minimum phases",
+          "owner": "[Auditor]",
+          "description": "For each cross-cutting concern, verify that phases_applied array has length >= minimum_phases.\n\nAUTOMATED CHECK:\n```python\nimport json\nd = json.load(open('playbook.json'))\nfor ccc in d['cross_cutting_concerns']:\n    if len(ccc['phases_applied']) < ccc['minimum_phases']:\n        print(f\"FAIL: {ccc['id']} has {len(ccc['phases_applied'])} phases, minimum is {ccc['minimum_phases']}\")\n```\n\nReport any violations and ensure they are fixed before proceeding.",
+          "output": "ccc-validation.md"
+        },
+        {
+          "title": "[Auditor] \u2014 Verify handoff chain integrity",
+          "owner": "[Auditor]",
+          "description": "Verify that files referenced in context_load appear in earlier phases' handoff blocks.\n\nFOR EACH PHASE N:\n1. Check compilation.context_load lists files\n2. Verify those files appear in handoff.output_artifacts of Phase N-1, N-2, etc.\n3. Check that gate handoff.next_phase_context lists files\n4. Verify those files are produced in the phase\n\nBUILD PROVENANCE GRAPH:\n- Track which phase creates each file\n- Track which phase uses each file\n- Report any files used but never created\n- Report any files created but never used\n\nAUTOMATED CHECK: If validate_playbook.py has --handoff-chain option, run it. Otherwise, trace manually.",
+          "output": "handoff-chain-validation.md"
+        },
+        {
           "title": "[Coordinator] \u2014 Phase gate: JSON valid and structurally complete",
           "owner": "[Coordinator]",
           "gate_conditions": [
             "validate_playbook.py passes with zero errors",
             "validate_semantic.py passes with zero errors",
-            "Manual review passed \u2014 tasks flow logically, descriptions are clear, no ambiguity"
+            "Manual review passed \u2014 tasks flow logically, descriptions are clear, no ambiguity",
+            "CCC validation: all cross-cutting concerns have phases_applied.length >= minimum_phases (ccc-validation.md documents verification)",
+            "Handoff chain validated: all context_load files have creators in earlier phases (handoff-chain-validation.md documents verification)"
           ],
           "blocker_examples": [
             "A [Role] appears in 2 task titles but is not in the roles{} section \u2014 undefined role, fix",
             "phase_kb_mapping says Phase 3 uses 'dsp-kb' but no gate handoff references that layer \u2014 reconcile",
-            "CCC-02 has phases_applied with only 2 entries but minimum_phases is 3 \u2014 weave into additional phase"
+            "CCC-02 has phases_applied with only 2 entries but minimum_phases is 3 \u2014 weave into additional phase",
+            "context_load references 'requirements.md' but no earlier phase produces it \u2014 add to handoff or remove from context_load"
           ],
           "guardrail_checks": [
             "Total phases, tasks, roles, CCCs, and metrics are within complexity_profile guardrail ranges \u2014 if outside, confirm with [Stakeholder]"
@@ -2772,6 +2818,14 @@
       "Phase 13 (Stakeholder Review & Iteration): Human review gate \u2014 break session here for genuine stakeholder input",
       "Phase 14 (Documentation & Version Control): Package final playbook with supporting docs",
       "Phase 15 (Continuous Improvement): Post-run review and optional playbook updates"
+    ],
+    "context_management": [
+      "Phases 0-1 share context (scoping + research are tightly coupled)",
+      "Phases 2-3 share context (architecture design then bootstrapping)",
+      "Phase 9 is context-heavy (JSON assembly loads all design documents) \u2014 consider fresh session",
+      "If context warning appears, summarize decisions-ledger.md and start fresh session",
+      "Always persist decisions-ledger.md, artifact-manifest.md, metrics-tracker.md before session break",
+      "Phase 10 benefits from fresh eyes \u2014 validate with new session, not immediately after Phase 9"
     ],
     "cost_optimization": [
       "Use compilation blocks \u2014 only load what the phase needs",
