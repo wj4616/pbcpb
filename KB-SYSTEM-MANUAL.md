@@ -115,3 +115,155 @@ Cross-references entries across all layers. Two formats exist:
 ```
 
 kb-route auto-detects the format at Step 1.
+
+## Entry Lifecycle
+
+Every KB entry progresses through a lifecycle:
+
+```
+placeholder → harvested → curated → synced
+```
+
+| Status | Meaning | How it gets here | Trust level |
+|--------|---------|-----------------|-------------|
+| `placeholder` | Empty shell — title and tags only, description starts with "TODO:" | PBCPB Phase 3 bootstrapping | None — triggers harvest or is skipped |
+| `harvested` | Content populated from web/local sources | `kb-harvest` fills it | Check confidence score before using |
+| `curated` | Human-reviewed and verified | Manual review + edit | High — use normally |
+| `synced` | Promoted after passing validation | `kb-sync --promote` | Full trust |
+
+**Entry file structure** (new KB schema):
+```json
+{
+  "id": "vst_sound-design_subtractive",
+  "kb": "sound-design",
+  "topic": "synthesis-types",
+  "status": "harvested",
+  "version": "1.0.0",
+  "title": "Subtractive Synthesis",
+  "summary": "Rich oscillator → filter → amp envelope...",
+  "description": "Full description text...",
+  "source": { "type": "expert-tutorial", "reference": "...", "url": "..." },
+  "concepts": [
+    { "name": "Oscillator", "description": "Sound source generating raw waveforms" }
+  ],
+  "tags": ["synthesis", "subtractive", "analog"],
+  "related_topics": ["parameter-mapping", "preset-methodology"],
+  "cross_references": [
+    { "kb": "technical", "entry_id": "vst_technical_filter-design", "relationship": "implements" }
+  ],
+  "domain_relevance": 9,
+  "difficulty": "beginner"
+}
+```
+
+**Harvested entries also have:**
+```json
+{
+  "harvest_metadata": {
+    "overall_confidence": 0.75,
+    "field_provenance": { ... },
+    "harvested_at": "2026-04-04T...",
+    "backend": "ddg+webfetch"
+  }
+}
+```
+
+## Confidence Scoring
+
+Entries carry confidence scores from two sources:
+
+1. **harvest_metadata.overall_confidence** — assigned by kb-harvest during population, refined by kb-validate's 5-factor formula
+2. **Top-level `confidence`** — present on bridge entries (manually assigned)
+
+### Thresholds
+
+| Confidence | Action |
+|---|---|
+| >= 0.60 | Use normally |
+| 0.40 - 0.59 | Use with warning — verify before relying on this |
+| < 0.40 | Exclude — too unreliable |
+| Absent | Use with note — "No confidence score available" |
+
+### kb-validate 5-Factor Formula
+
+kb-validate scores claims using:
+1. **Source authority** — is the source reputable?
+2. **Recency** — how old is the information?
+3. **Corroboration** — do multiple sources agree?
+4. **Specificity** — is it concrete or vague?
+5. **Internal consistency** — does it contradict other KB entries?
+
+These factors blend into `harvest_metadata.overall_confidence`.
+
+## Bridge System
+
+Bridges translate between domains — mapping subjective descriptors (e.g., "warm", "punchy") to technical parameters (e.g., `filter_cutoff: [0.2, 0.4]`).
+
+### Bridge Entry Structure
+
+Bridge entries live in `<kb.path>/bridge/<category>/bridge_<category>_<descriptor>.json`:
+
+```json
+{
+  "id": "bridge_timbre_warm",
+  "category": "timbre",
+  "descriptor": "warm",
+  "parameters": [
+    {
+      "parameter": "filter_cutoff",
+      "value_range": [0.2, 0.4],
+      "typical_default": 0.3,
+      "unit": "normalized",
+      "notes": "Low-pass filter reduces high frequencies for warmth"
+    }
+  ],
+  "confidence": 0.85,
+  "why": "Human-readable rationale for this mapping",
+  "anti_patterns": [
+    { "mistake": "Heavy saturation", "reason": "Too much saturation creates harshness" }
+  ],
+  "combinations": [
+    {
+      "compatible_with": "bridge_character_analog",
+      "notes": "Analog character enhances warmth through drift",
+      "confidence_modifier": 0.1
+    }
+  ]
+}
+```
+
+### Bridge Categories
+
+Categories group related descriptors. Current categories in the new KB:
+
+| Category | Example descriptors |
+|----------|-------------------|
+| timbre | warm, bright, dark |
+| dynamics | punchy, soft, aggressive |
+| space | wide, intimate, cavernous |
+| movement | evolving, static, rhythmic |
+| character | analog, digital, lo-fi |
+
+### Bridge Composition
+
+When a consumption skill needs multiple descriptors (e.g., "warm analog"), kb-route composes them:
+
+1. Read each bridge entry separately
+2. Check `combinations[]` for `compatible_with` references
+3. **If compatible:** merge parameter lists, apply `confidence_modifier`, intersection of `anti_patterns`
+4. **If not listed as compatible:** compose with lowered confidence (multiply each by 0.8), union of `anti_patterns`
+
+### Bridge Manifest
+
+The bridge layer uses `categories` (not `topics`) in its manifest:
+```json
+{
+  "categories": [
+    { "name": "timbre", "entry_count": 1, "entries": [...] }
+  ]
+}
+```
+
+### Bridge-Eligible Layers
+
+The registry's `bridge_eligible_layers[]` identifies which layers can participate in bridge translations. The master-index's `cross_layer_mappings` with `"relationship": "translates"` connects bridge layers to their source/target layers.
