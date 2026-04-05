@@ -267,3 +267,158 @@ The bridge layer uses `categories` (not `topics`) in its manifest:
 ### Bridge-Eligible Layers
 
 The registry's `bridge_eligible_layers[]` identifies which layers can participate in bridge translations. The master-index's `cross_layer_mappings` with `"relationship": "translates"` connects bridge layers to their source/target layers.
+
+## KB Skills Reference
+
+### kb-harvest — Populate Entries
+
+Populates KB entries from web sources, local files, or user-provided URLs. Every harvest operation maintains all KB infrastructure (manifests, master-index, cross-references).
+
+**Common commands:**
+```
+kb-harvest --kb <name>                     # Interactive harvest session
+kb-harvest --kb <name> --auto              # Auto-fill all placeholders
+kb-harvest --kb <name> --auto --refresh    # Re-harvest below confidence threshold
+kb-harvest --kb <name> --auto --entry <id> # Fill specific entry
+kb-harvest --kb <name> --urls <url1> ...   # Harvest specific URLs
+kb-harvest --kb <name> --layer <layer>     # Target specific layer
+kb-harvest --kb <name> --topic <topic>     # Target specific topic
+kb-harvest --kb <name> --batch <N>         # Set batch size (default 5)
+kb-harvest --kb <name> --import <path>     # Import external KB
+kb-harvest --kb <name> --rebuild-manifest  # Reconstruct manifests from files
+kb-harvest --status                        # Show harvest status across all KBs
+kb-harvest --list                          # List registered KBs
+```
+
+**Cascade:** After each batch, kb-harvest automatically updates: manifest → master-index → cross-references → bridge detection → search terms.
+
+### kb-sync — Verify and Repair
+
+Verifies KB consistency, repairs incomplete cascades, populates entry-level cross-references, promotes entry status.
+
+**Common commands:**
+```
+kb-sync --verify                              # Full consistency check (all KBs)
+kb-sync --verify --kb <name>                  # Verify specific KB
+kb-sync --repair                              # Fix inconsistencies
+kb-sync --repair --kb <name>                  # Repair specific KB
+kb-sync --promote --kb <name> --entry <id>    # Promote curated → synced
+kb-sync --status                              # Show sync status
+```
+
+**Scheduled:** Runs every 30 minutes via cron, checking for cascade journals from recent harvests.
+
+### kb-validate — Validate Claims
+
+Validates technical knowledge claims before implementation. Assigns confidence scores using the 5-factor formula.
+
+**Common commands:**
+```
+kb-validate --claim "JUCE SmoothedValue uses getNextValue() per sample"
+kb-validate --auto --source ${last_skill_output}
+kb-validate --gate --check-session
+kb-validate --report
+```
+
+**Triggers:** Auto-triggers after kb-harvest and firecrawl operations. Also runs as pre-implementation gate.
+
+### kb-route — Query Resolution
+
+Shared Resolution Procedure for querying KBs. Not invoked directly — consumption skills reference it inline.
+
+**How consumption skills use it:**
+```
+Read and follow the Resolution Procedure in ~/.claude/skills/kb-route/SKILL.md
+with parameters: concept="filter resonance"
+```
+
+**Steps:** Setup → Concept Lookup → Explore → Cross-Ref Follow → Bridge Resolution → Confidence Filter → Gap Detection → Result Summary
+
+See `~/.claude/skills/kb-route/SKILL.md` for the full procedure.
+
+## How-To Guides
+
+### Add a New KB
+
+1. Create the KB directory structure with layers:
+   ```
+   mkdir -p /path/to/new-kb/{layer1,layer2}/
+   ```
+2. Create a `master-index.json` at the KB root (use new format with `kb_layers[]`)
+3. Register in `~/.claude/kb-registry.json` — add entry to `registries[]`:
+   ```json
+   {
+     "name": "my-new-kb",
+     "path": "/path/to/new-kb",
+     "layers": ["layer1", "layer2"],
+     "bridge_eligible_layers": [],
+     "default_backend": "ddg+webfetch"
+   }
+   ```
+4. Run `kb-sync --verify --kb my-new-kb` to validate structure
+
+### Add a Layer to an Existing KB
+
+1. Create the layer directory: `mkdir -p <kb.path>/new-layer/`
+2. Create a manifest.json in the layer directory:
+   ```json
+   { "kb_name": "new-layer", "version": "1.0.0", "topics": [], "status_counts": {} }
+   ```
+3. Update `master-index.json` — add layer to `kb_layers[]` (or `knowledge_bases{}` for prototype format)
+4. Update `~/.claude/kb-registry.json` — add layer name to the KB's `layers[]`
+5. Run `kb-sync --verify --kb <name>` to validate
+
+### Populate Entries
+
+**Fill all placeholders in a KB:**
+```
+kb-harvest --kb <name> --auto
+```
+
+**Fill a specific entry:**
+```
+kb-harvest --kb <name> --auto --entry <entry-id> --batch 1
+```
+
+**Fill a specific topic:**
+```
+kb-harvest --kb <name> --topic <topic-name>
+```
+
+**Import from external source:**
+```
+kb-harvest --kb <name> --import /path/to/data --dry-run   # Preview first
+kb-harvest --kb <name> --import /path/to/data              # Execute
+```
+
+### Promote Entry Status
+
+Entries progress: `placeholder` → `harvested` → `curated` → `synced`.
+
+- `placeholder → harvested`: Automatic via kb-harvest
+- `harvested → curated`: Manual review — edit the entry file, set `"status": "curated"`
+- `curated → synced`: Via kb-sync: `kb-sync --promote --kb <name> --entry <id>`
+
+### Add a Bridge Direction
+
+1. Create bridge entries in `<kb.path>/bridge/<category>/bridge_<category>_<descriptor>.json`
+2. Add `cross_layer_mappings` to master-index.json:
+   ```json
+   { "from": "bridge", "to": "<target-layer>", "relationship": "translates" }
+   ```
+3. Add the source layer to `bridge_eligible_layers[]` in the registry
+4. Run `kb-sync --verify` to validate
+
+## Troubleshooting
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| "No KB registry found" | `~/.claude/kb-registry.json` missing | Run `kb-harvest --kb <name>` to create, or create manually |
+| "KB [name] registered but master-index.json not found" | Master-index deleted or KB path wrong | Check `path` in registry, run `kb-sync --repair` |
+| "KB [name] master-index format not recognized" | Corrupted or incompatible master-index | Regenerate master-index from layer directories |
+| Manifest shows 0 entries but files exist on disk | Manifest out of date | Run `kb-sync --repair --kb <name>` or `kb-harvest --kb <name> --rebuild-manifest` |
+| "Entry [filename] invalid JSON" | Corrupted entry file | Fix JSON syntax or delete and re-harvest |
+| Confidence scores all 0 or missing | Entries not validated after harvest | Run `kb-validate --auto` on harvested entries |
+| Cross-references point to missing entries | Entry deleted or renamed | Run `kb-sync --verify` then `kb-sync --repair` |
+| Bridge lookup returns nothing | Bridge entries not created for this descriptor | Create bridge entry or run `kb-harvest` targeting bridge layer |
+| "Harvest failed for [entry_id]" | Backend unavailable or rate-limited | Retry with different backend: `kb-harvest --kb <name> --backend websearch+webfetch --entry <id>` |
