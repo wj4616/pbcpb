@@ -311,32 +311,353 @@ Expected: "Valid"
 
 ---
 
-## Tasks 6-17: Remaining timbre entries (soft, nasal, plucky, metallic, glassy, wooden, breathy, buzzy, clean, distorted, thin)
+## Task 6: Create Bridge Entry - timbre/soft
 
-**Pattern:** Same structure as Tasks 3-5. Create entry file, verify JSON.
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_soft.json`
 
-- [ ] **Step 1:** Create bridge_timbre_soft.json
-- [ ] **Step 2:** Verify JSON
-- [ ] **Step 3:** Create bridge_timbre_nasal.json
-- [ ] **Step 4:** Verify JSON
-- [ ] **Step 5:** Create bridge_timbre_plucky.json
-- [ ] **Step 6:** Verify JSON
-- [ ] **Step 7:** Create bridge_timbre_metallic.json
-- [ ] **Step 8:** Verify JSON
-- [ ] **Step 9:** Create bridge_timbre_glassy.json
-- [ ] **Step 10:** Verify JSON
-- [ ] **Step 11:** Create bridge_timbre_wooden.json
-- [ ] **Step 12:** Verify JSON
-- [ ] **Step 13:** Create bridge_timbre_breathy.json
-- [ ] **Step 14:** Verify JSON
-- [ ] **Step 15:** Create bridge_timbre_buzzy.json
-- [ ] **Step 16:** Verify JSON
-- [ ] **Step 17:** Create bridge_timbre_clean.json
-- [ ] **Step 18:** Verify JSON
-- [ ] **Step 19:** Create bridge_timbre_distorted.json
-- [ ] **Step 20:** Verify JSON
-- [ ] **Step 21:** Create bridge_timbre_thin.json
-- [ ] **Step 22:** Verify JSON
+- [ ] **Step 1: Create bridge_timbre_soft.json**
+
+```json
+{
+  "id": "bridge_timbre_soft",
+  "category": "timbre",
+  "descriptor": "soft",
+  "parameters": [
+    {"parameter": "filter_cutoff", "value_range": [0.3, 0.5], "typical_default": 0.4, "unit": "normalized", "notes": "Moderate low-pass for gentle high frequency reduction"},
+    {"parameter": "filter_resonance", "value_range": [0.05, 0.15], "typical_default": 0.1, "unit": "normalized", "notes": "Low resonance maintains smoothness"}
+  ],
+  "confidence": 0.80,
+  "why": "Soft timbre is achieved by gentle low-pass filtering with low resonance. The result is smooth, non-aggressive, and pleasing to the ear.",
+  "anti_patterns": [
+    {"mistake": "High resonance", "reason": "Creates emphasis, not softness"},
+    {"mistake": "Very low cutoff", "reason": "Too dark, loses presence"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 7: Create Bridge Entry - timbre/nasal
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_nasal.json`
+
+- [ ] **Step 1: Create bridge_timbre_nasal.json**
+
+```json
+{
+  "id": "bridge_timbre_nasal",
+  "category": "timbre",
+  "descriptor": "nasal",
+  "parameters": [
+    {"parameter": "filter_cutoff", "value_range": [0.4, 0.6], "typical_default": 0.5, "unit": "normalized", "notes": "Mid-range emphasis creates nasal quality"},
+    {"parameter": "filter_resonance", "value_range": [0.3, 0.5], "typical_default": 0.4, "unit": "normalized", "notes": "Moderate resonance at mid frequencies"}
+  ],
+  "confidence": 0.75,
+  "why": "Nasal timbre comes from emphasized mid frequencies around 1-2kHz with moderate resonance, similar to the formant of human nasal vowels.",
+  "anti_patterns": [
+    {"mistake": "Very high resonance", "reason": "Creates piercing, not nasal tone"},
+    {"mistake": "Low cutoff", "reason": "Removes nasal frequency range"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 8: Create Bridge Entry - timbre/plucky
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_plucky.json`
+
+- [ ] **Step 1: Create bridge_timbre_plucky.json**
+
+```json
+{
+  "id": "bridge_timbre_plucky",
+  "category": "timbre",
+  "descriptor": "plucky",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.001, 0.01], "typical_default": 0.005, "unit": "seconds", "notes": "Very fast attack for percussive onset"},
+    {"parameter": "amp_release", "value_range": [0.1, 0.5], "typical_default": 0.3, "unit": "seconds", "notes": "Quick decay for plucky feel"},
+    {"parameter": "filter_env_amount", "value_range": [0.5, 0.9], "typical_default": 0.7, "unit": "normalized", "notes": "Strong filter envelope for harmonic sweep"}
+  ],
+  "confidence": 0.85,
+  "why": "Plucky timbre comes from fast attack, quick decay, and strong filter envelope that creates a brief harmonic sweep at note onset.",
+  "anti_patterns": [
+    {"mistake": "Slow attack", "reason": "Loses plucky percussive quality"},
+    {"mistake": "Long release", "reason": "Creates pad, not pluck"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 9: Create Bridge Entry - timbre/metallic
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_metallic.json`
+
+- [ ] **Step 1: Create bridge_timbre_metallic.json**
+
+```json
+{
+  "id": "bridge_timbre_metallic",
+  "category": "timbre",
+  "descriptor": "metallic",
+  "parameters": [
+    {"parameter": "filter_resonance", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "High resonance creates metallic ring"},
+    {"parameter": "filter_cutoff", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Mid-high cutoff for metallic frequencies"},
+    {"parameter": "osc_detune", "value_range": [0.0, 0.03], "typical_default": 0.01, "unit": "normalized", "notes": "Slight detune adds metallic shimmer"}
+  ],
+  "confidence": 0.75,
+  "why": "Metallic timbre comes from high resonance that emphasizes specific harmonics, creating a ringing, bell-like quality.",
+  "anti_patterns": [
+    {"mistake": "Low resonance", "reason": "Loses metallic character"},
+    {"mistake": "Heavy distortion", "reason": "Creates harsh, not metallic"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 10: Create Bridge Entry - timbre/glassy
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_glassy.json`
+
+- [ ] **Step 1: Create bridge_timbre_glassy.json**
+
+```json
+{
+  "id": "bridge_timbre_glassy",
+  "category": "timbre",
+  "descriptor": "glassy",
+  "parameters": [
+    {"parameter": "filter_cutoff", "value_range": [0.7, 0.95], "typical_default": 0.85, "unit": "normalized", "notes": "High cutoff allows high frequencies"},
+    {"parameter": "filter_resonance", "value_range": [0.3, 0.5], "typical_default": 0.4, "unit": "normalized", "notes": "Moderate resonance for glassy ring"},
+    {"parameter": "reverb_amount", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Reverb adds glassy ambience"}
+  ],
+  "confidence": 0.70,
+  "why": "Glassy timbre combines bright high frequencies with moderate resonance and reverb to create a crystalline, transparent quality.",
+  "anti_patterns": [
+    {"mistake": "Low cutoff", "reason": "Removes glassy high frequencies"},
+    {"mistake": "No reverb", "reason": "Loses glassy ambience"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 11: Create Bridge Entry - timbre/wooden
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_wooden.json`
+
+- [ ] **Step 1: Create bridge_timbre_wooden.json**
+
+```json
+{
+  "id": "bridge_timbre_wooden",
+  "category": "timbre",
+  "descriptor": "wooden",
+  "parameters": [
+    {"parameter": "filter_cutoff", "value_range": [0.2, 0.4], "typical_default": 0.3, "unit": "normalized", "notes": "Low-mid cutoff emphasizes body resonance"},
+    {"parameter": "filter_resonance", "value_range": [0.05, 0.15], "typical_default": 0.1, "unit": "normalized", "notes": "Low resonance for natural sound"},
+    {"parameter": "osc_waveform", "value_range": [0.0, 0.2], "typical_default": 0.1, "unit": "normalized", "notes": "Slightly filtered saw for wood texture"}
+  ],
+  "confidence": 0.70,
+  "why": "Wooden timbre comes from emphasized mid-low frequencies with low resonance, mimicking the acoustic properties of wooden instruments.",
+  "anti_patterns": [
+    {"mistake": "High resonance", "reason": "Creates synthetic, not woody tone"},
+    {"mistake": "Bright oscillator", "reason": "Too bright for wooden character"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 12: Create Bridge Entry - timbre/breathy
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_breathy.json`
+
+- [ ] **Step 1: Create bridge_timbre_breathy.json**
+
+```json
+{
+  "id": "bridge_timbre_breathy",
+  "category": "timbre",
+  "descriptor": "breathy",
+  "parameters": [
+    {"parameter": "noise_amount", "value_range": [0.2, 0.5], "typical_default": 0.35, "unit": "normalized", "notes": "Noise adds breathiness"},
+    {"parameter": "filter_cutoff", "value_range": [0.4, 0.7], "typical_default": 0.55, "unit": "normalized", "notes": "Moderate cutoff allows breath frequencies"},
+    {"parameter": "filter_resonance", "value_range": [0.0, 0.1], "typical_default": 0.05, "unit": "normalized", "notes": "Very low resonance for airy quality"}
+  ],
+  "confidence": 0.75,
+  "why": "Breathy timbre is created by adding noise content with moderate filtering, mimicking the air sound of wind instruments or breath in vocals.",
+  "anti_patterns": [
+    {"mistake": "High resonance", "reason": "Creates nasal, not breathy quality"},
+    {"mistake": "No noise", "reason": "Lacks breathy character entirely"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 13: Create Bridge Entry - timbre/buzzy
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_buzzy.json`
+
+- [ ] **Step 1: Create bridge_timbre_buzzy.json**
+
+```json
+{
+  "id": "bridge_timbre_buzzy",
+  "category": "timbre",
+  "descriptor": "buzzy",
+  "parameters": [
+    {"parameter": "filter_resonance", "value_range": [0.6, 0.9], "typical_default": 0.75, "unit": "normalized", "notes": "Very high resonance creates buzz"},
+    {"parameter": "filter_cutoff", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Mid-high cutoff for buzzy frequencies"},
+    {"parameter": "distortion_amount", "value_range": [0.2, 0.5], "typical_default": 0.35, "unit": "normalized", "notes": "Light distortion enhances buzz"}
+  ],
+  "confidence": 0.70,
+  "why": "Buzzy timbre comes from very high resonance that creates strong emphasis at specific frequencies, combined with slight distortion.",
+  "anti_patterns": [
+    {"mistake": "Low resonance", "reason": "No buzz without high resonance"},
+    {"mistake": "Low cutoff", "reason": "Removes buzzy frequencies"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 14: Create Bridge Entry - timbre/clean
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_clean.json`
+
+- [ ] **Step 1: Create bridge_timbre_clean.json**
+
+```json
+{
+  "id": "bridge_timbre_clean",
+  "category": "timbre",
+  "descriptor": "clean",
+  "parameters": [
+    {"parameter": "filter_resonance", "value_range": [0.0, 0.1], "typical_default": 0.05, "unit": "normalized", "notes": "Minimal resonance for clarity"},
+    {"parameter": "distortion_amount", "value_range": [0.0, 0.05], "typical_default": 0.0, "unit": "normalized", "notes": "No distortion for clean tone"},
+    {"parameter": "osc_detune", "value_range": [0.0, 0.02], "typical_default": 0.0, "unit": "normalized", "notes": "Minimal detune for clean, focused sound"}
+  ],
+  "confidence": 0.90,
+  "why": "Clean timbre is achieved by removing coloration - no resonance, no distortion, minimal detune. The result is transparent and uncolored.",
+  "anti_patterns": [
+    {"mistake": "Any resonance above 0.1", "reason": "Adds coloration, not clean"},
+    {"mistake": "Detune above 0.05", "reason": "Creates thickness, not clarity"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 15: Create Bridge Entry - timbre/distorted
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_distorted.json`
+
+- [ ] **Step 1: Create bridge_timbre_distorted.json**
+
+```json
+{
+  "id": "bridge_timbre_distorted",
+  "category": "timbre",
+  "descriptor": "distorted",
+  "parameters": [
+    {"parameter": "distortion_amount", "value_range": [0.5, 1.0], "typical_default": 0.75, "unit": "normalized", "notes": "High distortion for aggressive tone"},
+    {"parameter": "filter_cutoff", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Moderate cutoff controls harshness"},
+    {"parameter": "filter_resonance", "value_range": [0.1, 0.3], "typical_default": 0.2, "unit": "normalized", "notes": "Some resonance adds character"}
+  ],
+  "confidence": 0.85,
+  "why": "Distorted timbre comes from heavy saturation or waveshaping, adding harmonics and grit to the original signal.",
+  "anti_patterns": [
+    {"mistake": "Low distortion", "reason": "Not distorted, just saturated"},
+    {"mistake": "Very high cutoff", "reason": "Creates harsh high frequencies"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 16: Create Bridge Entry - timbre/thin
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/timbre/bridge_timbre_thin.json`
+
+- [ ] **Step 1: Create bridge_timbre_thin.json**
+
+```json
+{
+  "id": "bridge_timbre_thin",
+  "category": "timbre",
+  "descriptor": "thin",
+  "parameters": [
+    {"parameter": "filter_cutoff", "value_range": [0.6, 1.0], "typical_default": 0.8, "unit": "normalized", "notes": "High-pass or bright EQ removes lows"},
+    {"parameter": "filter_resonance", "value_range": [0.0, 0.1], "typical_default": 0.05, "unit": "normalized", "notes": "Low resonance maintains thinness"},
+    {"parameter": "osc_detune", "value_range": [0.0, 0.02], "typical_default": 0.0, "unit": "normalized", "notes": "No detune keeps sound focused and thin"}
+  ],
+  "confidence": 0.80,
+  "why": "Thin timbre is achieved by removing low frequencies and avoiding effects that add thickness like detune or reverb.",
+  "anti_patterns": [
+    {"mistake": "Low cutoff", "reason": "Adds low frequencies, not thin"},
+    {"mistake": "Detune or chorus", "reason": "Adds thickness"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
 
 ---
 
@@ -400,23 +721,971 @@ Expected: "Valid"
 
 ---
 
-## Tasks 19-31: Remaining dynamics entries (aggressive, gentle, sharp, round, bouncy, flat, compressed, open, tight, loose, explosive, sustain, pluck)
+## Task 19: Create Bridge Entry - dynamics/aggressive
 
-**Pattern:** Same structure. Create entry file, verify JSON.
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_aggressive.json`
+
+- [ ] **Step 1: Create bridge_dynamics_aggressive.json**
+
+```json
+{
+  "id": "bridge_dynamics_aggressive",
+  "category": "dynamics",
+  "descriptor": "aggressive",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.01], "typical_default": 0.005, "unit": "seconds", "notes": "Instant attack for aggressive onset"},
+    {"parameter": "filter_env_amount", "value_range": [0.7, 1.0], "typical_default": 0.85, "unit": "normalized", "notes": "Strong filter sweep for aggressive bite"},
+    {"parameter": "distortion_amount", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Distortion adds aggression"}
+  ],
+  "confidence": 0.85,
+  "why": "Aggressive dynamics come from instant attack, strong filter envelope, and distortion. The result is a hard-hitting, forward sound.",
+  "anti_patterns": [
+    {"mistake": "Slow attack", "reason": "Loses aggressive punch"},
+    {"mistake": "Low filter envelope", "reason": "No aggressive sweep"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
 
 ---
 
-## Tasks 32-46: space entries (intimate, cavernous, narrow, deep, shallow, distant, close, airy, dense, hollow, solid, ethereal, present, expansive, spacious)
+## Task 20: Create Bridge Entry - dynamics/gentle
 
-**Pattern:** Same structure. Create entry file, verify JSON.
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_gentle.json`
+
+- [ ] **Step 1: Create bridge_dynamics_gentle.json**
+
+```json
+{
+  "id": "bridge_dynamics_gentle",
+  "category": "dynamics",
+  "descriptor": "gentle",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.2, 0.8], "typical_default": 0.4, "unit": "seconds", "notes": "Slow attack for gentle onset"},
+    {"parameter": "amp_release", "value_range": [0.5, 2.0], "typical_default": 1.0, "unit": "seconds", "notes": "Long release for smooth fade"},
+    {"parameter": "filter_env_amount", "value_range": [0.0, 0.1], "typical_default": 0.05, "unit": "normalized", "notes": "Minimal filter movement"}
+  ],
+  "confidence": 0.85,
+  "why": "Gentle dynamics are achieved with slow attack, long release, and minimal filter envelope. Creates a soft, non-intrusive sound.",
+  "anti_patterns": [
+    {"mistake": "Fast attack", "reason": "Creates percussive, not gentle onset"},
+    {"mistake": "High filter envelope", "reason": "Too much movement"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
 
 ---
 
-## Tasks 47-60: movement entries (static, rhythmic, flowing, choppy, smooth, erratic, predictable, pulsing, swelling, fading, building, cycling, random, lfo)
+## Task 21: Create Bridge Entry - dynamics/sharp
 
-**Note:** "evolving" already exists.
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_sharp.json`
 
-**Pattern:** Same structure. Create entry file, verify JSON.
+- [ ] **Step 1: Create bridge_dynamics_sharp.json**
+
+```json
+{
+  "id": "bridge_dynamics_sharp",
+  "category": "dynamics",
+  "descriptor": "sharp",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.005], "typical_default": 0.001, "unit": "seconds", "notes": "Near-instant attack for sharp transient"},
+    {"parameter": "amp_release", "value_range": [0.05, 0.3], "typical_default": 0.15, "unit": "seconds", "notes": "Quick release for sharp decay"},
+    {"parameter": "filter_env_amount", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Moderate filter snap"}
+  ],
+  "confidence": 0.80,
+  "why": "Sharp dynamics come from extremely fast attack with quick decay. The transient is prominent and the sound cuts through.",
+  "anti_patterns": [
+    {"mistake": "Slow attack", "reason": "Dulls the sharp transient"},
+    {"mistake": "Long release", "reason": "Creates sustain, not sharp decay"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 22: Create Bridge Entry - dynamics/round
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_round.json`
+
+- [ ] **Step 1: Create bridge_dynamics_round.json**
+
+```json
+{
+  "id": "bridge_dynamics_round",
+  "category": "dynamics",
+  "descriptor": "round",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.02, 0.1], "typical_default": 0.05, "unit": "seconds", "notes": "Slightly softened attack"},
+    {"parameter": "amp_release", "value_range": [0.3, 1.0], "typical_default": 0.6, "unit": "seconds", "notes": "Medium release for round decay"},
+    {"parameter": "filter_cutoff", "value_range": [0.3, 0.5], "typical_default": 0.4, "unit": "normalized", "notes": "Moderate low-pass rounds edges"}
+  ],
+  "confidence": 0.75,
+  "why": "Round dynamics are achieved by softening the attack slightly and reducing high frequencies. The result is a full, non-sharp sound.",
+  "anti_patterns": [
+    {"mistake": "Instant attack", "reason": "Creates sharp, not round transient"},
+    {"mistake": "Bright filter", "reason": "Adds sharpness"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 23: Create Bridge Entry - dynamics/bouncy
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_bouncy.json`
+
+- [ ] **Step 1: Create bridge_dynamics_bouncy.json**
+
+```json
+{
+  "id": "bridge_dynamics_bouncy",
+  "category": "dynamics",
+  "descriptor": "bouncy",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.01], "typical_default": 0.005, "unit": "seconds", "notes": "Fast attack for bouncy start"},
+    {"parameter": "amp_release", "value_range": [0.1, 0.4], "typical_default": 0.25, "unit": "seconds", "notes": "Medium release for bounce"},
+    {"parameter": "lfo_rate", "value_range": [1.0, 4.0], "typical_default": 2.0, "unit": "Hz", "notes": "LFO creates bouncy movement"}
+  ],
+  "confidence": 0.70,
+  "why": "Bouncy dynamics come from fast attack with rhythmic modulation. The LFO creates a bouncing, energetic feel.",
+  "anti_patterns": [
+    {"mistake": "Slow attack", "reason": "Loses bouncy energy"},
+    {"mistake": "No modulation", "reason": "Static, not bouncy"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 24: Create Bridge Entry - dynamics/flat
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_flat.json`
+
+- [ ] **Step 1: Create bridge_dynamics_flat.json**
+
+```json
+{
+  "id": "bridge_dynamics_flat",
+  "category": "dynamics",
+  "descriptor": "flat",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.02], "typical_default": 0.01, "unit": "seconds", "notes": "Quick attack"},
+    {"parameter": "amp_sustain", "value_range": [0.8, 1.0], "typical_default": 0.95, "unit": "normalized", "notes": "High sustain for flat level"},
+    {"parameter": "amp_release", "value_range": [0.05, 0.3], "typical_default": 0.15, "unit": "seconds", "notes": "Quick release"}
+  ],
+  "confidence": 0.80,
+  "why": "Flat dynamics come from high sustain with minimal envelope shape. The sound maintains constant level without swell or decay.",
+  "anti_patterns": [
+    {"mistake": "Low sustain", "reason": "Creates decay, not flat"},
+    {"mistake": "Long attack", "reason": "Creates swell, not flat"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 25: Create Bridge Entry - dynamics/compressed
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_compressed.json`
+
+- [ ] **Step 1: Create bridge_dynamics_compressed.json**
+
+```json
+{
+  "id": "bridge_dynamics_compressed",
+  "category": "dynamics",
+  "descriptor": "compressed",
+  "parameters": [
+    {"parameter": "compression_ratio", "value_range": [4.0, 20.0], "typical_default": 8.0, "unit": "ratio", "notes": "High ratio for compressed feel"},
+    {"parameter": "compression_threshold", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Moderate threshold"},
+    {"parameter": "compression_attack", "value_range": [0.005, 0.03], "typical_default": 0.01, "unit": "seconds", "notes": "Fast attack catches transients"}
+  ],
+  "confidence": 0.85,
+  "why": "Compressed dynamics are achieved through heavy compression with high ratio, evening out the dynamic range.",
+  "anti_patterns": [
+    {"mistake": "Low ratio", "reason": "Not compressed enough"},
+    {"mistake": "Slow attack", "reason": "Transients escape compression"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 26: Create Bridge Entry - dynamics/open
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_open.json`
+
+- [ ] **Step 1: Create bridge_dynamics_open.json**
+
+```json
+{
+  "id": "bridge_dynamics_open",
+  "category": "dynamics",
+  "descriptor": "open",
+  "parameters": [
+    {"parameter": "amp_release", "value_range": [0.5, 2.0], "typical_default": 1.2, "unit": "seconds", "notes": "Long release for open feel"},
+    {"parameter": "filter_cutoff", "value_range": [0.6, 1.0], "typical_default": 0.8, "unit": "normalized", "notes": "High cutoff allows all frequencies"},
+    {"parameter": "reverb_amount", "value_range": [0.2, 0.5], "typical_default": 0.35, "unit": "normalized", "notes": "Reverb adds openness"}
+  ],
+  "confidence": 0.75,
+  "why": "Open dynamics come from long release, bright filter, and reverb. The sound feels spacious and unconfined.",
+  "anti_patterns": [
+    {"mistake": "Short release", "reason": "Cuts off openness"},
+    {"mistake": "Low filter cutoff", "reason": "Constrains the sound"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 27: Create Bridge Entry - dynamics/tight
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_tight.json`
+
+- [ ] **Step 1: Create bridge_dynamics_tight.json**
+
+```json
+{
+  "id": "bridge_dynamics_tight",
+  "category": "dynamics",
+  "descriptor": "tight",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.01], "typical_default": 0.005, "unit": "seconds", "notes": "Fast attack for tight transient"},
+    {"parameter": "amp_release", "value_range": [0.05, 0.2], "typical_default": 0.1, "unit": "seconds", "notes": "Quick release for tight decay"},
+    {"parameter": "compression_ratio", "value_range": [3.0, 8.0], "typical_default": 5.0, "unit": "ratio", "notes": "Moderate compression tightens"}
+  ],
+  "confidence": 0.80,
+  "why": "Tight dynamics come from fast attack, quick release, and compression. The sound is controlled and punchy.",
+  "anti_patterns": [
+    {"mistake": "Slow attack", "reason": "Loses tight transient"},
+    {"mistake": "Long release", "reason": "Sound drags, not tight"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 28: Create Bridge Entry - dynamics/loose
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_loose.json`
+
+- [ ] **Step 1: Create bridge_dynamics_loose.json**
+
+```json
+{
+  "id": "bridge_dynamics_loose",
+  "category": "dynamics",
+  "descriptor": "loose",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.05, 0.2], "typical_default": 0.1, "unit": "seconds", "notes": "Slower attack for loose feel"},
+    {"parameter": "amp_release", "value_range": [0.3, 1.0], "typical_default": 0.6, "unit": "seconds", "notes": "Longer release for looseness"},
+    {"parameter": "compression_ratio", "value_range": [1.0, 2.0], "typical_default": 1.5, "unit": "ratio", "notes": "Low or no compression"}
+  ],
+  "confidence": 0.70,
+  "why": "Loose dynamics come from slower attack, longer release, and minimal compression. The sound feels uncontrolled and relaxed.",
+  "anti_patterns": [
+    {"mistake": "Fast attack", "reason": "Creates tight, not loose feel"},
+    {"mistake": "Heavy compression", "reason": "Tightens the sound"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 29: Create Bridge Entry - dynamics/explosive
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_explosive.json`
+
+- [ ] **Step 1: Create bridge_dynamics_explosive.json**
+
+```json
+{
+  "id": "bridge_dynamics_explosive",
+  "category": "dynamics",
+  "descriptor": "explosive",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.003], "typical_default": 0.001, "unit": "seconds", "notes": "Instant attack for explosive start"},
+    {"parameter": "filter_env_amount", "value_range": [0.8, 1.0], "typical_default": 0.95, "unit": "normalized", "notes": "Maximum filter sweep"},
+    {"parameter": "distortion_amount", "value_range": [0.4, 0.8], "typical_default": 0.6, "unit": "normalized", "notes": "Distortion adds explosion"}
+  ],
+  "confidence": 0.75,
+  "why": "Explosive dynamics come from instant attack, maximum filter envelope, and distortion. The sound erupts with energy.",
+  "anti_patterns": [
+    {"mistake": "Slow attack", "reason": "No explosion without instant start"},
+    {"mistake": "Low filter envelope", "reason": "Lacks explosive sweep"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 30: Create Bridge Entry - dynamics/sustain
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_sustain.json`
+
+- [ ] **Step 1: Create bridge_dynamics_sustain.json**
+
+```json
+{
+  "id": "bridge_dynamics_sustain",
+  "category": "dynamics",
+  "descriptor": "sustain",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.1], "typical_default": 0.05, "unit": "seconds", "notes": "Variable attack for sustain"},
+    {"parameter": "amp_sustain", "value_range": [0.7, 1.0], "typical_default": 0.9, "unit": "normalized", "notes": "High sustain level"},
+    {"parameter": "amp_release", "value_range": [0.2, 1.0], "typical_default": 0.5, "unit": "seconds", "notes": "Variable release"}
+  ],
+  "confidence": 0.85,
+  "why": "Sustain dynamics focus on maintaining the sound level after attack. High sustain level creates continuous tone.",
+  "anti_patterns": [
+    {"mistake": "Low sustain level", "reason": "Creates decay, not sustain"},
+    {"mistake": "Very short release", "reason": "Cuts off sustain abruptly"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 31: Create Bridge Entry - dynamics/pluck
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/dynamics/bridge_dynamics_pluck.json`
+
+- [ ] **Step 1: Create bridge_dynamics_pluck.json**
+
+```json
+{
+  "id": "bridge_dynamics_pluck",
+  "category": "dynamics",
+  "descriptor": "pluck",
+  "parameters": [
+    {"parameter": "amp_attack", "value_range": [0.0, 0.005], "typical_default": 0.001, "unit": "seconds", "notes": "Very fast attack for pluck"},
+    {"parameter": "amp_sustain", "value_range": [0.0, 0.2], "typical_default": 0.1, "unit": "normalized", "notes": "Low sustain for pluck decay"},
+    {"parameter": "filter_env_amount", "value_range": [0.4, 0.8], "typical_default": 0.6, "unit": "normalized", "notes": "Filter envelope adds pluck character"}
+  ],
+  "confidence": 0.85,
+  "why": "Pluck dynamics come from instant attack, low sustain, and filter envelope. The sound decays quickly like a plucked string.",
+  "anti_patterns": [
+    {"mistake": "Slow attack", "reason": "Loses pluck attack"},
+    {"mistake": "High sustain", "reason": "Creates pad, not pluck"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 32: Create Bridge Entry - space/intimate
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_intimate.json`
+
+- [ ] **Step 1: Create bridge_space_intimate.json**
+
+```json
+{
+  "id": "bridge_space_intimate",
+  "category": "space",
+  "descriptor": "intimate",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.0, 0.15], "typical_default": 0.08, "unit": "normalized", "notes": "Very little reverb for intimate feel"},
+    {"parameter": "reverb_size", "value_range": [0.1, 0.3], "typical_default": 0.2, "unit": "normalized", "notes": "Small room size"},
+    {"parameter": "stereo_width", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Narrow stereo for intimacy"}
+  ],
+  "confidence": 0.85,
+  "why": "Intimate space is achieved with minimal reverb, small room size, and narrow stereo field. The listener feels close to the source.",
+  "anti_patterns": [
+    {"mistake": "Large reverb", "reason": "Creates distance, not intimacy"},
+    {"mistake": "Wide stereo", "reason": "Spreads sound, loses intimacy"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 33: Create Bridge Entry - space/cavernous
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_cavernous.json`
+
+- [ ] **Step 1: Create bridge_space_cavernous.json**
+
+```json
+{
+  "id": "bridge_space_cavernous",
+  "category": "space",
+  "descriptor": "cavernous",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Heavy reverb for cavernous feel"},
+    {"parameter": "reverb_size", "value_range": [0.8, 1.0], "typical_default": 0.9, "unit": "normalized", "notes": "Large hall or cathedral size"},
+    {"parameter": "reverb_decay", "value_range": [2.0, 6.0], "typical_default": 4.0, "unit": "seconds", "notes": "Long decay for cavernous echo"}
+  ],
+  "confidence": 0.85,
+  "why": "Cavernous space comes from heavy reverb with large size and long decay. The sound feels like it's in a large cave or cathedral.",
+  "anti_patterns": [
+    {"mistake": "Small reverb size", "reason": "Not cavernous enough"},
+    {"mistake": "Short decay", "reason": "Loses cavernous echo"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 34: Create Bridge Entry - space/narrow
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_narrow.json`
+
+- [ ] **Step 1: Create bridge_space_narrow.json**
+
+```json
+{
+  "id": "bridge_space_narrow",
+  "category": "space",
+  "descriptor": "narrow",
+  "parameters": [
+    {"parameter": "stereo_width", "value_range": [0.1, 0.4], "typical_default": 0.25, "unit": "normalized", "notes": "Narrow stereo image"},
+    {"parameter": "reverb_width", "value_range": [0.1, 0.3], "typical_default": 0.2, "unit": "normalized", "notes": "Narrow reverb"},
+    {"parameter": "haas_delay", "value_range": [0.0, 5.0], "typical_default": 2.0, "unit": "ms", "notes": "Minimal Haas delay"}
+  ],
+  "confidence": 0.80,
+  "why": "Narrow space focuses the stereo image to the center, creating a focused, mono-compatible sound.",
+  "anti_patterns": [
+    {"mistake": "Wide stereo", "reason": "Defeats narrow purpose"},
+    {"mistake": "Large Haas delay", "reason": "Creates width, not narrow"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 35: Create Bridge Entry - space/deep
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_deep.json`
+
+- [ ] **Step 1: Create bridge_space_deep.json**
+
+```json
+{
+  "id": "bridge_space_deep",
+  "category": "space",
+  "descriptor": "deep",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Moderate to heavy reverb"},
+    {"parameter": "reverb_decay", "value_range": [1.5, 4.0], "typical_default": 2.5, "unit": "seconds", "notes": "Long decay for depth"},
+    {"parameter": "filter_cutoff", "value_range": [0.2, 0.5], "typical_default": 0.35, "unit": "normalized", "notes": "Low-pass adds depth"}
+  ],
+  "confidence": 0.80,
+  "why": "Deep space is achieved through reverb with long decay and low-pass filtering. The sound feels distant and submerged.",
+  "anti_patterns": [
+    {"mistake": "Short decay", "reason": "No depth perception"},
+    {"mistake": "Bright filter", "reason": "Reduces depth feeling"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 36: Create Bridge Entry - space/shallow
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_shallow.json`
+
+- [ ] **Step 1: Create bridge_space_shallow.json**
+
+```json
+{
+  "id": "bridge_space_shallow",
+  "category": "space",
+  "descriptor": "shallow",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.05, 0.2], "typical_default": 0.1, "unit": "normalized", "notes": "Minimal reverb for shallow space"},
+    {"parameter": "reverb_size", "value_range": [0.1, 0.3], "typical_default": 0.2, "unit": "normalized", "notes": "Small room size"},
+    {"parameter": "stereo_width", "value_range": [0.4, 0.7], "typical_default": 0.55, "unit": "normalized", "notes": "Moderate stereo width"}
+  ],
+  "confidence": 0.75,
+  "why": "Shallow space has minimal reverb and small room size. The sound feels close and dry.",
+  "anti_patterns": [
+    {"mistake": "Heavy reverb", "reason": "Creates depth, not shallow"},
+    {"mistake": "Large room", "reason": "Adds space, not shallow"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 37: Create Bridge Entry - space/distant
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_distant.json`
+
+- [ ] **Step 1: Create bridge_space_distant.json**
+
+```json
+{
+  "id": "bridge_space_distant",
+  "category": "space",
+  "descriptor": "distant",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.4, 0.7], "typical_default": 0.55, "unit": "normalized", "notes": "Heavy reverb creates distance"},
+    {"parameter": "reverb_predelay", "value_range": [30, 80], "typical_default": 50, "unit": "ms", "notes": "Pre-delay simulates distance"},
+    {"parameter": "dry_wet_mix", "value_range": [0.3, 0.5], "typical_default": 0.4, "unit": "normalized", "notes": "More wet than dry"}
+  ],
+  "confidence": 0.80,
+  "why": "Distant space is achieved through heavy reverb with pre-delay. The dry signal fades and the reverb dominates.",
+  "anti_patterns": [
+    {"mistake": "No pre-delay", "reason": "Reverb mushes with dry, loses distance"},
+    {"mistake": "More dry than wet", "reason": "Sound appears closer"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 38: Create Bridge Entry - space/close
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_close.json`
+
+- [ ] **Step 1: Create bridge_space_close.json**
+
+```json
+{
+  "id": "bridge_space_close",
+  "category": "space",
+  "descriptor": "close",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.0, 0.15], "typical_default": 0.08, "unit": "normalized", "notes": "Very little reverb for close feel"},
+    {"parameter": "dry_wet_mix", "value_range": [0.8, 1.0], "typical_default": 0.9, "unit": "normalized", "notes": "Mostly dry signal"},
+    {"parameter": "stereo_width", "value_range": [0.2, 0.5], "typical_default": 0.35, "unit": "normalized", "notes": "Narrow stereo focuses presence"}
+  ],
+  "confidence": 0.85,
+  "why": "Close space is achieved by minimizing reverb and keeping the signal mostly dry. The sound feels right in front of the listener.",
+  "anti_patterns": [
+    {"mistake": "Heavy reverb", "reason": "Creates distance, not close"},
+    {"mistake": "Wide stereo", "reason": "Spreads sound, loses focus"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 39: Create Bridge Entry - space/airy
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_airy.json`
+
+- [ ] **Step 1: Create bridge_space_airy.json**
+
+```json
+{
+  "id": "bridge_space_airy",
+  "category": "space",
+  "descriptor": "airy",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.2, 0.5], "typical_default": 0.35, "unit": "normalized", "notes": "Moderate reverb for airiness"},
+    {"parameter": "filter_cutoff", "value_range": [0.6, 1.0], "typical_default": 0.8, "unit": "normalized", "notes": "High cutoff for airy brightness"},
+    {"parameter": "stereo_width", "value_range": [0.7, 1.0], "typical_default": 0.85, "unit": "normalized", "notes": "Wide stereo creates airiness"}
+  ],
+  "confidence": 0.75,
+  "why": "Airy space combines bright high frequencies, wide stereo, and moderate reverb. The sound feels light and floating.",
+  "anti_patterns": [
+    {"mistake": "Low filter cutoff", "reason": "Removes airy high frequencies"},
+    {"mistake": "Narrow stereo", "reason": "Constricts airiness"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 40: Create Bridge Entry - space/dense
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_dense.json`
+
+- [ ] **Step 1: Create bridge_space_dense.json**
+
+```json
+{
+  "id": "bridge_space_dense",
+  "category": "space",
+  "descriptor": "dense",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Heavy reverb creates density"},
+    {"parameter": "filter_cutoff", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Moderate cutoff keeps density"},
+    {"parameter": "osc_detune", "value_range": [0.1, 0.3], "typical_default": 0.2, "unit": "normalized", "notes": "Detune adds density"}
+  ],
+  "confidence": 0.75,
+  "why": "Dense space is achieved through heavy reverb, moderate filtering, and detune. The sound feels thick and filled.",
+  "anti_patterns": [
+    {"mistake": "Low reverb", "reason": "Lacks density"},
+    {"mistake": "No detune", "reason": "Sound is thin, not dense"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 41: Create Bridge Entry - space/hollow
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_hollow.json`
+
+- [ ] **Step 1: Create bridge_space_hollow.json**
+
+```json
+{
+  "id": "bridge_space_hollow",
+  "category": "space",
+  "descriptor": "hollow",
+  "parameters": [
+    {"parameter": "filter_cutoff", "value_range": [0.4, 0.7], "typical_default": 0.55, "unit": "normalized", "notes": "Mid-range emphasis creates hollow"},
+    {"parameter": "filter_resonance", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Resonance emphasizes hollow frequencies"},
+    {"parameter": "reverb_size", "value_range": [0.4, 0.7], "typical_default": 0.55, "unit": "normalized", "notes": "Medium reverb size"}
+  ],
+  "confidence": 0.70,
+  "why": "Hollow space emphasizes mid frequencies with resonance, creating a sound that feels like it's in a container.",
+  "anti_patterns": [
+    {"mistake": "Bright filter", "reason": "Adds high frequencies, loses hollow"},
+    {"mistake": "No resonance", "reason": "Flat sound, not hollow"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 42: Create Bridge Entry - space/solid
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_solid.json`
+
+- [ ] **Step 1: Create bridge_space_solid.json**
+
+```json
+{
+  "id": "bridge_space_solid",
+  "category": "space",
+  "descriptor": "solid",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.05, 0.2], "typical_default": 0.12, "unit": "normalized", "notes": "Minimal reverb for solidity"},
+    {"parameter": "stereo_width", "value_range": [0.3, 0.5], "typical_default": 0.4, "unit": "normalized", "notes": "Centered stereo for solid presence"},
+    {"parameter": "compression_ratio", "value_range": [2.0, 6.0], "typical_default": 4.0, "unit": "ratio", "notes": "Compression adds solidity"}
+  ],
+  "confidence": 0.75,
+  "why": "Solid space comes from minimal reverb, centered stereo, and compression. The sound feels grounded and present.",
+  "anti_patterns": [
+    {"mistake": "Heavy reverb", "reason": "Diffuses solidity"},
+    {"mistake": "Wide stereo", "reason": "Spreads sound, loses solid feel"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 43: Create Bridge Entry - space/ethereal
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_ethereal.json`
+
+- [ ] **Step 1: Create bridge_space_ethereal.json**
+
+```json
+{
+  "id": "bridge_space_ethereal",
+  "category": "space",
+  "descriptor": "ethereal",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Heavy reverb for ethereal feel"},
+    {"parameter": "reverb_decay", "value_range": [3.0, 8.0], "typical_default": 5.0, "unit": "seconds", "notes": "Very long decay"},
+    {"parameter": "filter_cutoff", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Moderate-high cutoff for shimmer"}
+  ],
+  "confidence": 0.80,
+  "why": "Ethereal space is achieved through heavy reverb with very long decay and bright filtering. The sound feels otherworldly and floating.",
+  "anti_patterns": [
+    {"mistake": "Short decay", "reason": "Loses ethereal quality"},
+    {"mistake": "Dark filter", "reason": "Removes ethereal shimmer"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 44: Create Bridge Entry - space/present
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_present.json`
+
+- [ ] **Step 1: Create bridge_space_present.json**
+
+```json
+{
+  "id": "bridge_space_present",
+  "category": "space",
+  "descriptor": "present",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.0, 0.1], "typical_default": 0.05, "unit": "normalized", "notes": "Minimal reverb for presence"},
+    {"parameter": "dry_wet_mix", "value_range": [0.85, 1.0], "typical_default": 0.95, "unit": "normalized", "notes": "Almost entirely dry"},
+    {"parameter": "stereo_width", "value_range": [0.4, 0.6], "typical_default": 0.5, "unit": "normalized", "notes": "Centered stereo"}
+  ],
+  "confidence": 0.85,
+  "why": "Present space has minimal processing. The dry signal dominates, creating an in-your-face sound.",
+  "anti_patterns": [
+    {"mistake": "Heavy reverb", "reason": "Creates distance, not presence"},
+    {"mistake": "Wide stereo", "reason": "Diffuses presence"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 45: Create Bridge Entry - space/expansive
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_expansive.json`
+
+- [ ] **Step 1: Create bridge_space_expansive.json**
+
+```json
+{
+  "id": "bridge_space_expansive",
+  "category": "space",
+  "descriptor": "expansive",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.4, 0.7], "typical_default": 0.55, "unit": "normalized", "notes": "Moderate to heavy reverb"},
+    {"parameter": "reverb_size", "value_range": [0.7, 1.0], "typical_default": 0.85, "unit": "normalized", "notes": "Large reverb size"},
+    {"parameter": "stereo_width", "value_range": [0.8, 1.0], "typical_default": 0.9, "unit": "normalized", "notes": "Wide stereo for expansiveness"}
+  ],
+  "confidence": 0.80,
+  "why": "Expansive space combines large reverb with wide stereo. The sound feels like it's filling a large space.",
+  "anti_patterns": [
+    {"mistake": "Small reverb size", "reason": "Not expansive"},
+    {"mistake": "Narrow stereo", "reason": "Constricts expansiveness"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 46: Create Bridge Entry - space/spacious
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/space/bridge_space_spacious.json`
+
+- [ ] **Step 1: Create bridge_space_spacious.json**
+
+```json
+{
+  "id": "bridge_space_spacious",
+  "category": "space",
+  "descriptor": "spacious",
+  "parameters": [
+    {"parameter": "reverb_amount", "value_range": [0.3, 0.6], "typical_default": 0.45, "unit": "normalized", "notes": "Moderate reverb for spaciousness"},
+    {"parameter": "reverb_size", "value_range": [0.5, 0.8], "typical_default": 0.65, "unit": "normalized", "notes": "Medium-large reverb size"},
+    {"parameter": "stereo_width", "value_range": [0.7, 1.0], "typical_default": 0.85, "unit": "normalized", "notes": "Wide stereo"}
+  ],
+  "confidence": 0.85,
+  "why": "Spacious space is achieved through moderate reverb, medium-large size, and wide stereo. The sound feels roomy and open.",
+  "anti_patterns": [
+    {"mistake": "No reverb", "reason": "No spaciousness"},
+    {"mistake": "Narrow stereo", "reason": "Reduces sense of space"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 47: Create Bridge Entry - movement/static
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/movement/bridge_movement_static.json`
+
+- [ ] **Step 1: Create bridge_movement_static.json**
+
+```json
+{
+  "id": "bridge_movement_static",
+  "category": "movement",
+  "descriptor": "static",
+  "parameters": [
+    {"parameter": "lfo_rate", "value_range": [0.0, 0.01], "typical_default": 0.0, "unit": "Hz", "notes": "No LFO modulation"},
+    {"parameter": "filter_env_amount", "value_range": [0.0, 0.05], "typical_default": 0.0, "unit": "normalized", "notes": "No filter envelope movement"},
+    {"parameter": "osc_detune", "value_range": [0.0, 0.02], "typical_default": 0.0, "unit": "normalized", "notes": "No detune movement"}
+  ],
+  "confidence": 0.90,
+  "why": "Static movement is achieved by eliminating all modulation sources. The sound remains constant and unchanging.",
+  "anti_patterns": [
+    {"mistake": "Any LFO rate above 0", "reason": "Creates movement, not static"},
+    {"mistake": "Detune above 0.02", "reason": "Adds subtle movement"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 48: Create Bridge Entry - movement/rhythmic
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/movement/bridge_movement_rhythmic.json`
+
+- [ ] **Step 1: Create bridge_movement_rhythmic.json**
+
+```json
+{
+  "id": "bridge_movement_rhythmic",
+  "category": "movement",
+  "descriptor": "rhythmic",
+  "parameters": [
+    {"parameter": "lfo_rate", "value_range": [0.5, 4.0], "typical_default": 2.0, "unit": "Hz", "notes": "LFO synced to rhythm"},
+    {"parameter": "lfo_depth", "value_range": [0.3, 0.8], "typical_default": 0.5, "unit": "normalized", "notes": "Moderate to deep modulation"},
+    {"parameter": "lfo_shape", "value_range": [0.0, 0.3], "typical_default": 0.1, "unit": "normalized", "notes": "Square or saw for rhythmic feel"}
+  ],
+  "confidence": 0.85,
+  "why": "Rhythmic movement uses LFO at rhythmic rates (1-8 Hz) with sharp waveforms. Creates pulsing, rhythmic feel.",
+  "anti_patterns": [
+    {"mistake": "Very slow LFO", "reason": "Creates slow movement, not rhythmic"},
+    {"mistake": "Sine wave LFO", "reason": "Too smooth for rhythmic feel"}
+  ],
+  "combinations": [],
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Task 49-60: Remaining movement entries
+
+**Pattern:** Same structure as Tasks 47-48. Create entry files for: flowing, choppy, smooth, erratic, predictable, pulsing, swelling, fading, building, cycling, random, lfo.
+
+- [ ] **Step 1-24:** Create movement entry files and verify JSON validity for each
 
 ---
 
@@ -425,6 +1694,24 @@ Expected: "Valid"
 **Note:** "analog" already exists.
 
 **Pattern:** Same structure. Create entry file, verify JSON.
+
+Key parameter patterns:
+- **digital:** clean, precise, no drift, high filter cutoff, no saturation
+- **lo-fi:** low sample rate feel, bitcrush, low filter cutoff, noise
+- **hi-fi:** full bandwidth, high quality, clean processing
+- **vintage:** analog drift, saturation, subtle noise, warmth
+- **modern:** clean, precise, high fidelity, digital precision
+- **natural:** organic imperfections, room tone, realistic
+- **synthetic:** clearly artificial, electronic, processed
+- **organic:** natural, acoustic, unprocessed qualities
+- **mechanical:** machine-like, precise, repetitive
+- **electric:** electric instrument character, pickup qualities
+- **acoustic:** natural instrument resonance, room sound
+- **warm-digital:** digital clarity with subtle warmth added
+- **cold:** sterile, clinical, no warmth, precise
+- **hybrid:** blend of analog and digital characteristics
+
+- [ ] **Step 1-28:** Create character entry files and verify JSON validity for each
 
 ---
 
@@ -552,11 +1839,66 @@ git commit -m "feat: add combination references to bridge entries"
 
 ---
 
-## Tasks 79-92: Remaining technical entries
+## Task 79: Create Technical Entry - envelope_design
+
+**Files:**
+- Create: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/technical/dsp-algorithms/vst_technical_envelope-design.json`
+
+- [ ] **Step 1: Create vst_technical_envelope-design.json**
+
+```json
+{
+  "id": "vst_technical_envelope-design",
+  "kb": "technical",
+  "topic": "dsp-algorithms",
+  "status": "curated",
+  "version": "1.0.0",
+  "title": "Envelope Design",
+  "summary": "ADSR envelope implementation with stage transitions and curve shapes",
+  "description": "Attack-Decay-Sustain-Release envelope design for audio parameter control. Covers linear, exponential, and logarithmic curves, stage transitions, and common envelope patterns.",
+  "source": {"type": "documentation", "reference": "JUCE ADSR class", "url": "https://docs.juce.com/master/classADSR.html"},
+  "concepts": [
+    {"name": "Attack time", "description": "Time to reach peak level"},
+    {"name": "Decay time", "description": "Time to fall to sustain level"},
+    {"name": "Sustain level", "description": "Held level during note"},
+    {"name": "Release time", "description": "Time to fall to zero after note-off"}
+  ],
+  "tags": ["envelope", "adsr", "dynamics", "amplitude"],
+  "related_topics": ["filter_design", "modulation_routing"],
+  "cross_references": [
+    {"kb": "bridge", "entry_id": "bridge_dynamics_soft", "relationship": "implements"},
+    {"kb": "bridge", "entry_id": "bridge_dynamics_punchy", "relationship": "implements"}
+  ],
+  "domain_relevance": 9,
+  "difficulty": "beginner",
+  "created": "2026-04-07T00:00:00Z"
+}
+```
+
+- [ ] **Step 2: Verify JSON validity**
+
+---
+
+## Tasks 80-92: Remaining technical entries
 
 **Pattern:** Same structure. Create entry file, verify JSON, update topic manifest.
 
-Entries: envelope_design, oscillator_design, gain_staging, modulation_routing, time_stretching, reverb_design, distortion_types, chorus_flanger, compressor_design, eq_design, delay_design, stereo_processing, preset_architecture, parameter_smoothing
+Entries with key concepts:
+- **oscillator_design:** Waveforms, anti-aliasing, interpolation, phase modulation
+- **gain_staging:** dB relationships, headroom, clipping prevention, signal flow
+- **modulation_routing:** LFO targets, modulation depth, rate ranges, mod matrix
+- **time_stretching:** Phase vocoder, granular methods, quality tradeoffs, pitch preservation
+- **reverb_design:** Early reflections, decay tail, room modeling, impulse response
+- **distortion_types:** Saturation curves, waveshaping, bitcrush, overdrive
+- **chorus_flanger:** Delay modulation, feedback, rate/depth interaction, LFO
+- **compressor_design:** Attack/release timing, ratio, knee characteristics, gain reduction
+- **eq_design:** Shelf types, peak filters, notch applications, frequency response
+- **delay_design:** Tap patterns, feedback routing, sync methods, tempo
+- **stereo_processing:** Width control, mid/side, imaging, panning
+- **preset_architecture:** State management, XML/value tree, preset format, save/load
+- **parameter_smoothing:** SmoothedValue usage, ramp times, artifact prevention, interpolation
+
+- [ ] **Steps 1-28:** Create technical entry files and verify JSON validity for each
 
 ---
 
