@@ -4,9 +4,16 @@
 
 **Goal:** Update consumption skills to use kb-route Resolution Procedure, expand bridge layer to 76 entries, populate technical layer, add 2 new skills.
 
-**Architecture:** KB-first approach — populate bridge and technical layers before updating skills. Hybrid harvesting: automated kb-harvest for technical entries, manual curation for subjective bridge entries. Interface preservation — skill invocations remain unchanged, internal behavior enhanced.
+**Architecture:** KB-first approach — populate bridge and technical layers before updating skills. Hybrid harvesting: automated kb-harvest for technical entries (when available), manual curation for subjective bridge entries. Interface preservation — skill invocations remain unchanged, internal behavior enhanced.
 
-**Tech Stack:** kb-route skill, kb-harvest skill, kb-validate skill, existing JUCE consumption skills
+**Tech Stack:** kb-route skill, existing JUCE consumption skills, manual KB entry creation
+
+**Prerequisite Check:**
+- ✅ kb-route skill exists at `~/.claude/skills/kb-route/SKILL.md`
+- ⚠️ kb-harvest skill NOT found — Phase 2 will use manual creation + kb-route validation
+- ⚠️ kb-validate skill NOT found — Phase 2 will use manual validation via kb-route lookup
+- ✅ vst-product-lifecycle KB exists with correct layer structure
+- ✅ cross_layer_mappings already include bridge → technical
 
 ---
 
@@ -16,11 +23,11 @@
 |-------|-------------|--------|--------------|
 | 1 | Bridge Expansion: 75 new bridge entries | 18-25 hrs | None |
 | 2 | Technical KB Population: 25 entries | 12-18 hrs | None |
-| 3 | New Bridge Directions & Registry Updates | 2-3 hrs | Phase 1, 2 |
+| 3 | Registry Updates | 1-2 hrs | Phase 1, 2 |
 | 4 | Consumption Skill Updates: 4 skills | 6-8 hrs | Phase 1, 2, 3 |
 | 5 | New Consumption Skills: 2 skills | 3-3 hrs | Phase 4 |
 
-**Total Effort:** 41-57 hours
+**Total Effort:** 40-56 hours
 
 ---
 
@@ -32,7 +39,7 @@
 |----------|-------|---------------------|
 | timbre | 15 | warm, bright, dark, harsh, soft, nasal, plucky, metallic, glassy, wooden, breathy, buzzy, clean, distorted, thin |
 | dynamics | 15 | punchy, soft, aggressive, gentle, sharp, round, bouncy, flat, compressed, open, tight, loose, explosive, sustain, pluck |
-| space | 15 | wide, intimate, cavernous, narrow, deep, shallow, distant, close, airy, dense, hollow, solid, ethereal, present, distant |
+| space | 15 | wide, intimate, cavernous, narrow, deep, shallow, distant, close, airy, dense, hollow, solid, ethereal, present, expansive |
 | movement | 15 | evolving, static, rhythmic, flowing, choppy, smooth, erratic, predictable, pulsing, swelling, fading, building, cycling, random, lfo |
 | character | 15 | analog, digital, lo-fi, hi-fi, vintage, modern, natural, synthetic, organic, mechanical, electric, acoustic, warm-digital, cold, hybrid |
 
@@ -94,7 +101,11 @@ Manual curation required for bridge entries due to subjective nature.
 5. Identify anti-patterns (common mistakes)
 6. Define compatible combinations with confidence modifiers
 7. Assign initial confidence score (0.70-0.90 for curated entries)
-8. Save to `~/playbooks/vst-product-lifecycle-playbook/kb/bridge/<category>/bridge_<category>_<descriptor>.json`
+8. **Check for ID collisions:** Glob `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/*/bridge_*.json` for existing IDs
+9. Save to `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/<category>/bridge_<category>_<descriptor>.json`
+10. **Update manifest cascade:**
+    - Update topic/category manifest: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/manifest.json`
+    - Update master-index: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/master-index.json`
 
 ### Quality Criteria
 
@@ -104,18 +115,38 @@ Each entry must satisfy:
 - [ ] At least 2 anti-patterns
 - [ ] At least 1 combination reference
 - [ ] Confidence score 0.70-0.90
+- [ ] No ID collision with existing entries
+
+### Manifest Cascade
+
+After batch of entries (recommended: 5-10 per batch):
+
+```bash
+# 1. Update bridge manifest
+# Edit: $HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/manifest.json
+# Add entry to appropriate category's entries array
+
+# 2. Update master-index
+# Edit: $HOME/playbooks/vst-product-lifecycle-playbook/kb/master-index.json
+# Increment bridge entry_count
+
+# 3. Verify via kb-route lookup
+# Read kb-route skill and query for a newly created entry
+```
 
 ---
 
 ## Phase 2: Technical KB Population
 
-### Hybrid Workflow Strategy
+### Workflow Strategy
+
+Since kb-harvest and kb-validate skills do not exist, Phase 2 uses manual creation with kb-route validation.
 
 | Entry Type | Method | Workflow |
 |------------|--------|----------|
-| DSP fundamentals | kb-harvest | Auto-populate from JUCE docs, validate confidence ≥0.60 |
-| JUCE APIs | kb-harvest | Auto-populate from JUCE documentation |
-| Synthesis techniques | Hybrid | Harvest + manual curation (subjective aspects) |
+| DSP fundamentals | Manual | Create from JUCE docs, DSP literature |
+| JUCE APIs | Manual | Extract from JUCE documentation |
+| Synthesis techniques | Manual | Curate from synthesis references |
 | Implementation patterns | Manual | Curated from verified code patterns |
 
 ### 15 Curated Technical Entries (Manual)
@@ -142,28 +173,15 @@ Pull existing entries from `/home/myuser/agents/juce-agent/playbookdata/` with:
 - Provenance preserved (note original source)
 - Reformat to new schema if needed
 - Cross-reference to bridge entries where applicable
-
-### kb-harvest Commands
-
-```bash
-# Auto-populate DSP fundamentals
-kb-harvest --kb vst-product-lifecycle --layer technical --auto \
-  --backend ddg+webfetch --min-confidence 0.40
-
-# Validate after harvest
-kb-validate --auto --kb vst-product-lifecycle --layer technical
-
-# Flag entries needing curation (confidence < 0.60)
-kb-sync --verify --kb vst-product-lifecycle
-```
+- **Verify path exists before migration:** `ls /home/myuser/agents/juce-agent/playbookdata/`
 
 ### Technical Entry Schema
 
 ```json
 {
   "id": "vst_technical_filter-design",
-  "kb": "vst-product-lifecycle",
-  "topic": "dsp-fundamentals",
+  "kb": "technical",
+  "topic": "dsp-algorithms",
   "status": "curated",
   "version": "1.0.0",
   "title": "Filter Design",
@@ -184,26 +202,53 @@ kb-sync --verify --kb vst-product-lifecycle
 }
 ```
 
+### Entry Creation Process
+
+1. Create entry file: `$HOME/playbooks/vst-product-lifecycle-playbook/kb/technical/<topic>/<entry_id>.json`
+2. **Check for ID collisions:** Glob `$HOME/playbooks/vst-product-lifecycle-playbook/kb/technical/*/*.json`
+3. Populate content from source material
+4. Set status: "curated"
+5. Add cross-references to bridge entries
+6. **Update manifest cascade:**
+   - Update topic manifest
+   - Update layer manifest
+   - Update master-index
+
+### Validation
+
+Since kb-validate doesn't exist, validate manually:
+
+```bash
+# Verify entry is readable via kb-route
+# Read kb-route skill and query for the concept
+
+# Check JSON validity
+cat <entry_file> | python3 -m json.tool > /dev/null && echo "Valid JSON"
+```
+
 ---
 
-## Phase 3: New Bridge Directions & Registry Updates
+## Phase 3: Registry Updates
 
 ### Registry Modification
 
-Update `~/.claude/kb-registry.json`:
+Update `$HOME/.claude/kb-registry.json`:
 
 ```json
 {
   "name": "vst-product-lifecycle",
+  "path": "/home/myuser/playbooks/vst-product-lifecycle-playbook/kb",
+  "layers": ["technical", "sound-design", "ui-ux", "commercial", "reference", "bridge"],
   "bridge_eligible_layers": ["sound-design", "technical"],
-  ...
+  "default_backend": "ddg+webfetch"
 }
 ```
 
+**Note:** `bridge_eligible_layers` already includes "sound-design" in the current registry. This update adds "technical" to enable bridge → technical translations.
+
 ### Cross-Layer Mappings
 
-Add to `~/playbooks/vst-product-lifecycle-playbook/kb/master-index.json`:
-
+**Already exists in master-index.json:**
 ```json
 {
   "cross_layer_mappings": [
@@ -213,11 +258,15 @@ Add to `~/playbooks/vst-product-lifecycle-playbook/kb/master-index.json`:
 }
 ```
 
+No update needed — mappings are already in place.
+
 ### Entry Count Summary
 
-- **Before Phase 1:** 1 bridge entry (`bridge_timbre_warm`)
-- **After Phase 1:** 76 bridge entries (75 new + 1 existing)
-- **Distribution:** 15 per category × 5 categories + 1 existing = 76
+- **Before Phase 1:** 5 bridge entries (from master-index)
+- **After Phase 1:** 80 bridge entries (75 new + 5 existing)
+- **Distribution:** 15 per category × 5 categories + 5 existing = 80
+
+**Correction:** Master-index shows 5 existing bridge entries, not 1. Plan updated to reflect 75 + 5 = 80 total.
 
 ### Combination Handling
 
@@ -228,10 +277,6 @@ The kb-route Resolution Procedure handles composition logic:
 2. Check `combinations[]` for compatibility
 3. Apply confidence modifiers
 4. Merge parameter lists or use default 0.8 multiplier for unknown combinations
-
-### UI-UX Layer
-
-Deferred to future work. Not blocking bridge functionality.
 
 ---
 
@@ -250,7 +295,7 @@ Deferred to future work. Not blocking bridge functionality.
 
 ### juce-sound-design-bridge Update
 
-**Current behavior:** Hardcoded translation table
+**Current behavior:** Hardcoded translation table with 5 entries (warm, bright, punchy, fat, movement)
 
 **Updated behavior:**
 
@@ -273,12 +318,14 @@ Deferred to future work. Not blocking bridge functionality.
 5. Present translation with source attribution and confidence
 ```
 
-**Fallback table preserved:**
+**Fallback table preserved (from existing skill):**
 ```json
 {
   "warm": {"filter_cutoff": [0.2, 0.4], "filter_resonance": [0.1, 0.2]},
   "bright": {"filter_cutoff": [0.6, 1.0]},
-  "punchy": {"amp_attack": [0.0, 0.01], "filter_env_amount": [0.3, 0.7]}
+  "punchy": {"amp_attack": [0.0, 0.01], "filter_env_amount": [0.3, 0.7]},
+  "fat": {"osc_detune": [0.05, 0.15], "stereo_width": [0.6, 0.9], "saturation": [0.2, 0.4]},
+  "movement": {"lfo_rate": [0.1, 2.0], "lfo_depth": [0.3, 0.7], "filter_env_amount": [0.2, 0.5]}
 }
 ```
 
@@ -334,11 +381,33 @@ Concept Lookup:
 Create test script verifying kb-route integration:
 
 ```bash
-# ~/.claude/skills/juce-sound-design-bridge/test-kb-route-integration.sh
+#!/bin/bash
+# File: $HOME/.claude/skills/juce-sound-design-bridge/test-kb-route-integration.sh
+# Purpose: Verify kb-route integration in juce-sound-design-bridge
+
+set -e
+
+echo "=== KB-Route Integration Test ==="
 
 # Test 1: Known descriptor returns KB result
+echo "Test 1: Known descriptor (warm)..."
+# This test verifies kb-route can find bridge_timbre_warm entry
+# Expected: Returns parameter mappings with confidence >= 0.60
+# Run: Read kb-route skill with bridge_descriptor="warm"
+
 # Test 2: Unknown descriptor falls back to built-in table
+echo "Test 2: Unknown descriptor fallback..."
+# This test verifies fallback when descriptor not in KB
+# Expected: Uses fallback table and notes "Using fallback translation"
+# Run: Read kb-route skill with bridge_descriptor="unknown_descriptor_xyz"
+
 # Test 3: Medium confidence entry returns warning
+echo "Test 3: Medium confidence warning..."
+# This test verifies warning for confidence 0.40-0.59
+# Expected: Warning message "Medium confidence - verify before applying"
+# Run: Read kb-route skill with bridge_descriptor having confidence 0.50
+
+echo "=== Tests Complete ==="
 ```
 
 ---
@@ -368,7 +437,8 @@ description: Apply preset design methodology from KB
    - Present with warning: "Medium confidence - verify before applying"
 
 4. If no results:
-   - Fall back to GROUND_TRUTH_PRESETS.md patterns
+   - Fall back to GROUND_TRUTH_PRESETS.md patterns at:
+     $HOME/agents/juce-agent/validation-logs/GROUND_TRUTH_PRESETS.md
 
 5. Apply methodology:
    - User provides sound goal
@@ -412,17 +482,42 @@ description: Query testing best practices from KB
 | Risk | Mitigation |
 |------|------------|
 | Bridge entries too subjective | Manual curation + confidence scoring + fallback tables |
-| Technical entries low quality | kb-harvest confidence thresholds + manual review pass |
+| Technical entries low quality | Manual creation from verified sources + cross-reference validation |
 | Skills break existing behavior | Interface preservation + fallback retention + test scripts |
 | kb-route queries return nothing | Fallback logic preserved in all skills |
+| kb-harvest/kb-validate missing | Manual creation workflow with JSON validation |
+
+---
+
+## Prerequisites Verification
+
+Before starting implementation, verify:
+
+```bash
+# 1. kb-route skill exists
+ls -la $HOME/.claude/skills/kb-route/SKILL.md
+
+# 2. vst-product-lifecycle KB exists
+ls -la $HOME/playbooks/vst-product-lifecycle-playbook/kb/master-index.json
+
+# 3. KB registry configured
+cat $HOME/.claude/kb-registry.json | grep "vst-product-lifecycle"
+
+# 4. Existing skills to update
+ls -la $HOME/.claude/skills/juce-sound-design-bridge/SKILL.md
+ls -la $HOME/.claude/skills/juce-dsp-implementation/SKILL.md
+ls -la $HOME/.claude/skills/juce-ui-bridge/SKILL.md
+ls -la $HOME/.claude/skills/juce-plugin-spec/SKILL.md
+```
 
 ---
 
 ## Success Criteria
 
-- [ ] 76 bridge entries exist with confidence ≥ 0.70
-- [ ] 25 technical entries exist with confidence ≥ 0.60
-- [ ] Registry updated with bridge_eligible_layers
+- [ ] 80 bridge entries exist (75 new + 5 existing) with confidence ≥ 0.70
+- [ ] 25 technical entries exist with status "curated"
+- [ ] Registry updated with bridge_eligible_layers including "technical"
 - [ ] 4 consumption skills updated with kb-route integration
 - [ ] 2 new consumption skills created
-- [ ] All test scripts pass
+- [ ] Test scripts pass verification
+- [ ] Manifest cascade verified for all new entries
