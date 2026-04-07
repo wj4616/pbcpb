@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Update consumption skills to use kb-route Resolution Procedure, expand bridge layer to 76 entries, populate technical layer, add 2 new skills.
+**Goal:** Update consumption skills to use kb-route Resolution Procedure, expand bridge layer to 76 entries (71 new + 5 existing), populate technical layer, add 2 new skills.
 
-**Architecture:** KB-first approach — populate bridge and technical layers before updating skills. Hybrid harvesting: automated kb-harvest for technical entries (when available), manual curation for subjective bridge entries. Interface preservation — skill invocations remain unchanged, internal behavior enhanced.
+**Architecture:** KB-first approach — populate bridge and technical layers before updating skills. Manual curation for all entries (kb-harvest and kb-validate skills not available). Interface preservation — skill invocations remain unchanged, internal behavior enhanced.
 
 **Tech Stack:** kb-route skill, existing JUCE consumption skills, manual KB entry creation
 
@@ -21,27 +21,66 @@
 
 | Phase | Deliverable | Effort | Dependencies |
 |-------|-------------|--------|--------------|
-| 1 | Bridge Expansion: 75 new bridge entries | 18-25 hrs | None |
+| 1 | Bridge Expansion: 71 new bridge entries | 17-23 hrs | None |
 | 2 | Technical KB Population: 25 entries | 12-18 hrs | None |
 | 3 | Registry Updates | 1-2 hrs | Phase 1, 2 |
 | 4 | Consumption Skill Updates: 4 skills | 6-8 hrs | Phase 1, 2, 3 |
-| 5 | New Consumption Skills: 2 skills | 3-3 hrs | Phase 4 |
+| 5 | New Consumption Skills: 2 skills | 2-4 hrs | Phase 4 |
 
-**Total Effort:** 40-56 hours
+**Total Effort:** 38-55 hours
 
 ---
 
 ## Phase 1: Bridge Expansion
 
-### Categories & Entry Distribution
+### Pre-flight: Existing Entry Inventory
 
-| Category | Count | Example Descriptors |
-|----------|-------|---------------------|
-| timbre | 15 | warm, bright, dark, harsh, soft, nasal, plucky, metallic, glassy, wooden, breathy, buzzy, clean, distorted, thin |
-| dynamics | 15 | punchy, soft, aggressive, gentle, sharp, round, bouncy, flat, compressed, open, tight, loose, explosive, sustain, pluck |
-| space | 15 | wide, intimate, cavernous, narrow, deep, shallow, distant, close, airy, dense, hollow, solid, ethereal, present, expansive |
-| movement | 15 | evolving, static, rhythmic, flowing, choppy, smooth, erratic, predictable, pulsing, swelling, fading, building, cycling, random, lfo |
-| character | 15 | analog, digital, lo-fi, hi-fi, vintage, modern, natural, synthetic, organic, mechanical, electric, acoustic, warm-digital, cold, hybrid |
+Before creating new entries, inventory existing entries to avoid collisions:
+
+```bash
+# Check existing bridge entries
+ls $HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/*/
+```
+
+**Existing entries (5):**
+| Category | Entry ID | Status |
+|----------|----------|--------|
+| timbre | bridge_timbre_warm | EXISTS - skip in creation |
+| dynamics | bridge_dynamics_punchy | EXISTS - skip in creation |
+| space | bridge_space_wide | EXISTS - skip in creation |
+| movement | bridge_movement_evolving | EXISTS - skip in creation |
+| character | bridge_character_analog | EXISTS - skip in creation |
+
+**Action:** Remove these from new entry lists. Update manifest to reflect existing entries.
+
+### Categories & Entry Distribution (Adjusted)
+
+| Category | New Entries | Total (New + Existing) |
+|----------|-------------|------------------------|
+| timbre | 14 (skip warm) | 15 |
+| dynamics | 14 (skip punchy) | 15 |
+| space | 15 (wide not in list) | 16 |
+| movement | 14 (skip evolving) | 15 |
+| character | 14 (skip analog) | 15 |
+
+**Total: 71 new entries + 5 existing = 76 entries**
+
+### New Entry Descriptors by Category
+
+**timbre (14 new, skip warm):**
+bright, dark, harsh, soft, nasal, plucky, metallic, glassy, wooden, breathy, buzzy, clean, distorted, thin
+
+**dynamics (14 new, skip punchy):**
+soft, aggressive, gentle, sharp, round, bouncy, flat, compressed, open, tight, loose, explosive, sustain, pluck
+
+**space (15 new - wide already exists but not in list):**
+intimate, cavernous, narrow, deep, shallow, distant, close, airy, dense, hollow, solid, ethereal, present, expansive, spacious
+
+**movement (14 new, skip evolving):**
+static, rhythmic, flowing, choppy, smooth, erratic, predictable, pulsing, swelling, fading, building, cycling, random, lfo
+
+**character (14 new, skip analog):**
+digital, lo-fi, hi-fi, vintage, modern, natural, synthetic, organic, mechanical, electric, acoustic, warm-digital, cold, hybrid
 
 ### Bridge Entry Schema
 
@@ -92,6 +131,27 @@ Each entry follows this structure:
 ### Entry Creation Method
 
 Manual curation required for bridge entries due to subjective nature.
+
+**Pre-flight: Sync Manifest**
+
+Before creating entries, sync the manifest to reflect existing entries:
+
+```bash
+# Check current manifest state
+cat $HOME/playbooks/vst-product-lifecycle-playbook/kb/bridge/manifest.json
+
+# Manifest should show entry_count: 1 for each category with existing entry
+# Current state: entry_count: 0 for all (out of sync)
+```
+
+Update manifest to include existing entries before creating new ones.
+
+**Combination Ordering Strategy:**
+
+New entries reference combinations (e.g., `bridge_character_analog`). To avoid circularity:
+1. Create all entries WITHOUT `combinations[]` array first
+2. After all entries exist, add `combinations[]` references to each entry
+3. This ensures referenced entries exist before being referenced
 
 **Process per entry:**
 1. Define descriptor and category
@@ -262,11 +322,9 @@ No update needed — mappings are already in place.
 
 ### Entry Count Summary
 
-- **Before Phase 1:** 5 bridge entries (from master-index)
-- **After Phase 1:** 80 bridge entries (75 new + 5 existing)
-- **Distribution:** 15 per category × 5 categories + 5 existing = 80
-
-**Correction:** Master-index shows 5 existing bridge entries, not 1. Plan updated to reflect 75 + 5 = 80 total.
+- **Before Phase 1:** 5 bridge entries (verified on disk)
+- **After Phase 1:** 76 bridge entries (71 new + 5 existing)
+- **Distribution:** ~15 per category
 
 ### Combination Handling
 
@@ -514,10 +572,82 @@ ls -la $HOME/.claude/skills/juce-plugin-spec/SKILL.md
 
 ## Success Criteria
 
-- [ ] 80 bridge entries exist (75 new + 5 existing) with confidence ≥ 0.70
+- [ ] 76 bridge entries exist (71 new + 5 existing) with confidence ≥ 0.70
 - [ ] 25 technical entries exist with status "curated"
 - [ ] Registry updated with bridge_eligible_layers including "technical"
 - [ ] 4 consumption skills updated with kb-route integration
 - [ ] 2 new consumption skills created
 - [ ] Test scripts pass verification
 - [ ] Manifest cascade verified for all new entries
+
+---
+
+## Appendix A: Manifest Structure
+
+**Bridge manifest.json structure:**
+```json
+{
+  "kb_name": "bridge",
+  "version": "1.0.0",
+  "last_updated": "2026-04-07T...",
+  "categories": [
+    {
+      "name": "timbre",
+      "entry_count": 15,
+      "entries": [
+        {"id": "bridge_timbre_warm", "status": "curated", "file": "timbre/bridge_timbre_warm.json"}
+      ]
+    }
+  ],
+  "status_counts": {
+    "placeholder": 0,
+    "harvested": 0,
+    "curated": 15,
+    "synced": 0
+  }
+}
+```
+
+**Technical manifest.json structure:**
+```json
+{
+  "kb_name": "technical",
+  "version": "1.0.0",
+  "topics": [
+    {
+      "name": "dsp-algorithms",
+      "entry_count": 5,
+      "entries": [
+        {"id": "vst_technical_filter-design", "status": "curated"}
+      ]
+    }
+  ],
+  "status_counts": {...}
+}
+```
+
+---
+
+## Appendix B: Skill Update Method
+
+Each consumption skill update follows this process:
+
+1. **Read existing skill file:**
+   ```bash
+   cat $HOME/.claude/skills/juce-sound-design-bridge/SKILL.md
+   ```
+
+2. **Identify insertion point:**
+   - For juce-sound-design-bridge: Insert after "Step 3: Query Sound Design KB"
+   - For juce-dsp-implementation: Insert after "Pre-flight Check"
+   - For juce-ui-bridge: Insert at start of procedure
+   - For juce-plugin-spec: Insert in "Concept Lookup" section
+
+3. **Add kb-route integration:**
+   - Add the kb-route invocation block
+   - Add confidence handling logic
+   - Preserve existing fallback logic
+
+4. **Verify syntax:**
+   - Ensure YAML frontmatter intact
+   - Check markdown formatting
