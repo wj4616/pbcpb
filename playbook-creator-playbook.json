@@ -40,9 +40,9 @@
     "capability_assessment": {
       "_description": "Maps phases to minimum model tier. If executing model is below minimum, trigger accommodations.",
       "tiers": {
-        "opus": "Full capability — can execute all phases as written",
-        "sonnet": "High capability — split Phase 9 (JSON Assembly) into 2 sessions; add extra validation in Phases 10-12",
-        "haiku": "Basic capability — split every phase into its own session; use automated validation exclusively at gates; skip subjective audit dimensions (detail calibration, completability) in Phase 11"
+        "opus": "Full capability \u2014 can execute all phases as written",
+        "sonnet": "High capability \u2014 split Phase 9 (JSON Assembly) into 2 sessions; add extra validation in Phases 10-12",
+        "haiku": "Basic capability \u2014 split every phase into its own session; use automated validation exclusively at gates; skip subjective audit dimensions (detail calibration, completability) in Phase 11"
       },
       "phase_minimums": {
         "phase_0": "haiku",
@@ -425,7 +425,7 @@
         {
           "title": "[Coordinator] \u2014 Estimate context budget and plan session boundaries",
           "owner": "[Coordinator]",
-          "description": "CONTEXT BUDGET ESTIMATION:\nEstimate the total context needed for this playbook run:\n1. This PBCPB file: ~83K tokens\n2. Commission brief: estimate from user's input length\n3. Research documents (Phase 1): typically 10-30K tokens total\n4. KB entries (Phase 3): estimate based on complexity_profile.knowledge (flat: ~5K, layered: ~20K, bridged: ~50K+)\n5. Architecture docs (Phase 4-6): typically 10-20K tokens\n6. Assembled JSON (Phase 9): typically 15-40K tokens\n\nIf total estimated context exceeds the executing model's context window (e.g., 200K for opus, 200K for sonnet), identify which phases MUST run in fresh sessions to avoid context overflow.\n\nSESSION BOUNDARY PLANNING:\nBased on the session_strategy in this playbook's usage_instructions AND the context budget estimate, document planned session breaks in decisions-ledger.md. Record which phases share sessions and where fresh sessions start.\n\nCRITICAL: The design-to-assembly transition (Phase 8 → Phase 9) is the highest-risk overflow point. If budget is tight, this MUST be a fresh session break with explicit state serialization (all decisions, artifacts, and KB status written to persistent files before break).\n\nSession breaks should align with phase gates where decisions-ledger.md is updated.\n\nVerify: every phase (0-15) appears in exactly one session group. No phase is orphaned or double-counted.",
+          "description": "CONTEXT BUDGET ESTIMATION:\nEstimate the total context needed for this playbook run:\n1. This PBCPB file: ~83K tokens\n2. Commission brief: estimate from user's input length\n3. Research documents (Phase 1): typically 10-30K tokens total\n4. KB entries (Phase 3): estimate based on complexity_profile.knowledge (flat: ~5K, layered: ~20K, bridged: ~50K+)\n5. Architecture docs (Phase 4-6): typically 10-20K tokens\n6. Assembled JSON (Phase 9): typically 15-40K tokens\n\nIf total estimated context exceeds the executing model's context window (e.g., 200K for opus, 200K for sonnet), identify which phases MUST run in fresh sessions to avoid context overflow.\n\nSESSION BOUNDARY PLANNING:\nBased on the session_strategy in this playbook's usage_instructions AND the context budget estimate, document planned session breaks in decisions-ledger.md. Record which phases share sessions and where fresh sessions start.\n\nCRITICAL: The design-to-assembly transition (Phase 8 \u2192 Phase 9) is the highest-risk overflow point. If budget is tight, this MUST be a fresh session break with explicit state serialization (all decisions, artifacts, and KB status written to persistent files before break).\n\nSession breaks should align with phase gates where decisions-ledger.md is updated.\n\nVerify: every phase (0-15) appears in exactly one session group. No phase is orphaned or double-counted.",
           "output": "decisions-ledger.md (context budget estimate + session plan)"
         },
         {
@@ -459,7 +459,7 @@
             "verification_script": "For each file in handoff.output_artifacts: verify file exists at path and has >0 bytes. Report PASS/FAIL per file.",
             "minimum_automated_ratio": 0.5
           },
-          "stakeholder_question": "Review the scope boundaries — is there anything in the OUT OF SCOPE list that should actually be covered, or anything IN SCOPE that's too ambitious for v1?",
+          "stakeholder_question": "Review the scope boundaries \u2014 is there anything in the OUT OF SCOPE list that should actually be covered, or anything IN SCOPE that's too ambitious for v1?",
           "blocker_examples": [
             "scope.md missing configuration section \u2014 ask user for output location and external data permissions before proceeding",
             "Purpose statement says 'improve the process' without specifying which process or what improvement looks like \u2014 too vague, rewrite",
@@ -721,13 +721,13 @@
         {
           "title": "[Architect] \u2014 Determine KB complexity level",
           "owner": "[Architect]",
-          "description": "Decision question: 'Do users of this playbook describe goals in language that differs from implementation language?'\n  YES \u2192 structured KB with bridge layer needed (e.g., audio: 'warm' \u2192 filter cutoff 0.2-0.4)\n  NO \u2192 assess if domain has enough distinct knowledge types to warrant layers\n\nDecision question: 'Does this domain have enough distinct knowledge types to justify separate layers?'\n  YES \u2192 multi-layer KB (define layers)\n  NO \u2192 flat reference (single folder of markdown files with table of contents)\n\nThe minimal path is genuinely minimal: single reference layer, no bridge, no cross-references, flat file list. A folder of markdown with a TOC. That is the floor."
+          "description": "Decision question: 'Do users of this playbook describe goals in language that differs from implementation language?'\n  YES \u2192 structured KB with bridge layer needed (e.g., audio: 'warm' \u2192 filter cutoff 0.2-0.4)\n  NO \u2192 assess if domain has enough distinct knowledge types to warrant layers\n\nDecision question: 'Does this domain have enough distinct knowledge types to justify separate layers?'\n  YES \u2192 multi-layer KB (define layers)\n  NO \u2192 flat reference (single folder of markdown files with table of contents)\n\nIf structured KB selected, also specify web harvesting configuration: which backends are available (ddg+webfetch, websearch+webfetch, webfetch, firecrawl, imported), default quality threshold (0.0-1.0), and max URLs per session.\n\nThe minimal path is genuinely minimal: single reference layer, no bridge, no cross-references, flat file list. A folder of markdown with a TOC. That is the floor."
         },
         {
           "title": "[Architect] \u2014 Define knowledge layers",
           "owner": "[Architect]",
           "conditional": "Only if multi-layer KB was chosen in Task 1",
-          "description": "For each layer: name and domain boundary (what belongs here and what doesn't), authority score (0.0-1.0), separation rule (why this can't merge with another layer), topics within the layer.\n\nSeparation principle: knowledge that changes independently lives in separate layers.",
+          "description": "For each layer: name and domain boundary (what belongs here and what doesn't), authority score (0.0-1.0), separation rule (why this can't merge with another layer), topics within the layer.\n\nFor each layer, also specify which harvesting backends are appropriate for that layer's content: ddg+webfetch (DuckDuckGo + WebFetch), websearch+webfetch (WebSearch + WebFetch), webfetch (direct URL), firecrawl (requires API key), imported (from external KB). Not all layers need the same backends.\n\nSeparation principle: knowledge that changes independently lives in separate layers.",
           "output": "kb-architecture.md"
         },
         {
@@ -746,13 +746,20 @@
         {
           "title": "[Architect] \u2014 Define population strategy",
           "owner": "[Architect]",
-          "description": "Placeholder seeding: what entries get created as placeholders during playbook setup (minimum one per topic per layer, with fallback content).\nHarvesting: where content comes from, quality criteria for harvested content.\nCuration rules: what must happen before harvested content becomes curated.\nSync rules: how curated entries get indexed.\nVersioning protocol: entries are append-only. Existing entries are never edited \u2014 they are superseded by new entries tagged with the relevant version. Old entries remain for reference or rollback. Queries filter by version tag.",
+          "description": "Placeholder seeding: what entries get created as placeholders during playbook setup (minimum one per topic per layer, with fallback content).\nHarvesting: where content comes from, quality criteria for harvested content.\nCuration rules: what must happen before harvested content becomes curated.\nSync rules: how curated entries get indexed.\nVersioning protocol: entries are append-only. Existing entries are never edited \u2014 they are superseded by new entries tagged with the relevant version. Old entries remain for reference or rollback. Queries filter by version tag.\n\nWeb harvesting configuration (for structured KBs):\n- backends: array of enabled backends (ddg+webfetch, websearch+webfetch, webfetch, firecrawl, imported)\n- domain_rankings: object mapping domain strings to authority scores (e.g., {\"docs.juce.com\": 0.95, \"forum.cabbage.com\": 0.7})\n- quality_threshold: minimum confidence score for harvested entries (default 0.7)\n- max_urls_per_session: maximum URLs to process per harvest session (default 5)",
           "output": "population-strategy.md"
+        },
+        {
+          "title": "[Architect] \u2014 Specify KB access patterns",
+          "owner": "[Architect]",
+          "conditional": "Only if multi-layer KB was chosen in Task 1",
+          "description": "Define how agents will query the KB during playbook execution:\n\n1. Query patterns: What questions will agents ask of this KB? List typical query types.\n2. Cross-layer queries: Which queries span multiple layers? How should results be merged?\n3. Bridge queries: If bridge layer exists, what creative-to-technical translations will be needed?\n4. Harvesting triggers: When should agents harvest new content? (user request, gap detected, periodic refresh)\n\nOutput: kb-access-spec.md documenting query patterns, expected query types per layer, and harvesting triggers.",
+          "output": "kb-access-spec.md"
         },
         {
           "title": "[Architect] \u2014 Define index and directory structure",
           "owner": "[Architect]",
-          "description": "Master index format (registry of all KBs, cross-topic mappings), per-KB index format (file listing by topic), per-KB manifest format (file status and sync history), cross-reference rules (results ranked by authority score), file naming conventions, exact directory tree.",
+          "description": "Master index format (registry of all KBs, cross-topic mappings), per-KB index format (file listing by topic), per-KB manifest format (file status and sync history), cross-reference rules (results ranked by authority score), file naming conventions, exact directory tree.\n\nKB registry: specify the path to the KB registry file (typically ~/.claude/kb-registry.json). The registry tracks all KB layers, their locations, and metadata for cross-KB queries. Each layer entry in the registry includes: name, path, domain_boundary, authority_score, and topics.",
           "output": "directory-structure.md"
         },
         {
@@ -766,13 +773,18 @@
             "Bridge schema defined if domain requires translation layer",
             "If bridge not needed: explicit justification documented",
             "Population pipeline defined with source, quality criteria, and curation rules",
+            "If structured KB: population_strategy includes backends array and quality_threshold",
+            "If structured KB: kb-access-spec.md documents query patterns and harvesting triggers",
+            "If structured KB: domain_rankings specified for authoritative domains",
             "Index and cross-reference structure defined with exact file formats",
-            "Directory tree specified down to file naming convention"
+            "Directory tree specified down to file naming convention",
+            "KB registry path specified (typically ~/.claude/kb-registry.json)"
           ],
           "blocker_examples": [
             "Chose 'structured multi-layer' for a simple ops checklist that has one knowledge type \u2014 over-engineered, switch to flat",
             "Two layers both claim 'implementation patterns' \u2014 overlapping boundaries, merge or redefine separation rules",
-            "Entry schema lists fields but no example entry \u2014 an agent can't verify the schema works without a concrete example, add one"
+            "Entry schema lists fields but no example entry \u2014 an agent can't verify the schema works without a concrete example, add one",
+            "Population strategy lacks domain_rankings for authoritative domains \u2014 harvesting will treat all sources equally, add domain authority scores"
           ],
           "handoff": {
             "output_artifacts": [
@@ -780,7 +792,8 @@
               "entry-schema.json",
               "bridge-schema.json (if applicable)",
               "population-strategy.md",
-              "directory-structure.md"
+              "directory-structure.md",
+              "kb-access-spec.md (if applicable)"
             ],
             "next_phase_context": [
               "kb-architecture.md (full)",
@@ -788,6 +801,7 @@
               "bridge-schema.json (if applicable)",
               "population-strategy.md",
               "directory-structure.md",
+              "kb-access-spec.md (if applicable)",
               "research/domain-analysis.md (for KB harvesting)",
               "research/best-practices.md (for KB harvesting)",
               "research/cross-cutting-concerns.md"
@@ -862,7 +876,8 @@
           "One placeholder entry per topic per layer created and conforms to entry-schema.json",
           "All harvestable research content captured in KB entries (zero skipped items)",
           "Master-index.json and per-layer manifests reflect actual entry counts",
-          "If bridge layer: at least one bridge entry per descriptor category conforming to bridge-schema.json"
+          "If bridge layer: at least one bridge entry per descriptor category conforming to bridge-schema.json",
+          "KB registry populated with all layer metadata"
         ],
         "tools_available": [
           "file_reading",
@@ -885,6 +900,12 @@
           "output": "kb/ directory tree, master-index.json, per-layer manifest.json files"
         },
         {
+          "title": "[Builder] \u2014 Register KB layers",
+          "owner": "[Builder]",
+          "description": "Populate kb-registry.json with layer metadata from kb-architecture.md. Each layer entry includes: name, path (relative to ~/.claude/), domain_boundary, authority_score, topics array. The registry enables cross-KB queries and provides metadata for authority-weighted result ranking. Create the registry file at ~/.claude/kb-registry.json if it doesn't exist, or append to existing registry if other KBs are already registered.",
+          "output": "kb-registry.json updated"
+        },
+        {
           "title": "[Builder] \u2014 Seed placeholder entries",
           "owner": "[Builder]",
           "description": "Create one placeholder entry per topic per layer as defined in population-strategy.md. Each placeholder must conform to entry-schema.json with status=\"placeholder\" and empty content fields.\n\nVerify: placeholder count matches the topic count from kb-architecture.md.\n\nEXECUTION: Work one KB layer at a time. Seed all placeholders for the first layer, then the second, and so on. Update the per-layer manifest.json after completing each layer. Do not attempt all layers in a single response.",
@@ -893,7 +914,7 @@
         {
           "title": "[Coordinator] \u2014 Seeding milestone gate: all placeholders created",
           "owner": "[Coordinator]",
-          "description": "MILESTONE GATE — verify seeding is complete before transitioning to harvesting. This is a different cognitive mode: seeding is mechanical (Builder), harvesting is analytical (Researcher). Do NOT skip this checkpoint.\n\nVerify:\n1. Placeholder count matches topic count from kb-architecture.md\n2. Every placeholder conforms to entry-schema.json with status='placeholder'\n3. Per-layer manifest.json files reflect actual placeholder counts\n4. Directory tree matches directory-structure.md\n\nIf any check fails, fix before proceeding to harvesting.",
+          "description": "MILESTONE GATE \u2014 verify seeding is complete before transitioning to harvesting. This is a different cognitive mode: seeding is mechanical (Builder), harvesting is analytical (Researcher). Do NOT skip this checkpoint.\n\nVerify:\n1. Placeholder count matches topic count from kb-architecture.md\n2. Every placeholder conforms to entry-schema.json with status='placeholder'\n3. Per-layer manifest.json files reflect actual placeholder counts\n4. Directory tree matches directory-structure.md\n\nIf any check fails, fix before proceeding to harvesting.",
           "milestone_gate_conditions": [
             "Placeholder count matches kb-architecture.md topic count",
             "All placeholders have status='placeholder' and conform to entry-schema.json",
@@ -903,8 +924,22 @@
         {
           "title": "[Researcher] \u2014 Harvest initial content from research documents",
           "owner": "[Researcher]",
-          "description": "ROLE CHANGE: This task requires Researcher mindset (analytical extraction), not Builder mindset (mechanical creation). Read research documents carefully and extract substantive content.\n\nWalk through research/domain-analysis.md, research/best-practices.md, and research/cross-cutting-concerns.md. For each knowledge item that maps to a KB entry, update the placeholder with harvested content and change status from \"placeholder\" to \"harvested\".\n\nHarvested entries must have:\n- description field >100 characters of substantive content (not boilerplate)\n- concepts array populated with at least 2 entries\n- source.reference citing the specific research document and section\n- tags array populated\n\nIf replacing an existing playbook and its KB data was flagged for harvest in Phase 1, include that source.\n\nUpdate per-layer manifest.json and master-index.json with entry counts.\n\nQuality gate: harvested entries must cite their source document and section.\n\nEXECUTION: Harvest one KB layer at a time. Complete all harvesting for the first layer, update its manifest, then proceed to the next layer. Do not attempt all layers in a single response.\n\nCRITICAL: Count placeholder entries remaining after harvesting. If any entry accessible from research still has status='placeholder', this task is NOT complete. The Phase 3 gate will verify zero skipped harvestable entries.",
+          "description": "ROLE CHANGE: This task requires Researcher mindset (analytical extraction), not Builder mindset (mechanical creation). Read research documents carefully and extract substantive content.\n\nWalk through research/domain-analysis.md, research/best-practices.md, and research/cross-cutting-concerns.md. For each knowledge item that maps to a KB entry, update the placeholder with harvested content and change status from \"placeholder\" to \"harvested\".\n\nHarvested entries must have:\n- description field >100 characters of substantive content (not boilerplate)\n- concepts array populated with at least 2 entries\n- source.reference citing the specific research document and section\n- tags array populated\n\nIf replacing an existing playbook and its KB data was flagged for harvest in Phase 1, include that source.\n\nUpdate per-layer manifest.json and master-index.json with entry counts.\n\nQuality gate: harvested entries must cite their source document and section.\n\nEXECUTION: Harvest one KB layer at a time. Complete all harvesting for the first layer, update its manifest, then proceed to the next layer. Do not attempt all layers in a single response.\n\nCRITICAL: Count placeholder entries remaining after harvesting. If any entry accessible from research still has status='placeholder', this task is NOT complete. The Phase 3 gate will verify zero skipped harvestable entries.\n\nOutput: kb/ harvested entries, updated manifests",
           "output": "kb/ harvested entries, updated manifests"
+        },
+        {
+          "title": "[Researcher] \u2014 Generate web harvest search terms",
+          "owner": "[Researcher]",
+          "conditional": "Only if structured KB and web harvesting enabled",
+          "description": "For each KB layer with harvested content gaps, generate search terms for web harvesting.\n\nProcess:\n1. Review placeholder entries with status='placeholder' that need external content\n2. For each topic area, generate 2-5 search terms that would find authoritative content\n3. Cross-reference with domain_rankings from population_strategy to identify high-authority domains\n4. Output search-terms.json mapping topics to search term arrays\n\nExample: For a 'sound-design' layer topic 'warm', generate: ['audio warm sound definition', 'warm frequency range audio', 'warm filter settings synthesis']\n\nOutput: search-terms.json with {layer_name: {topic: [search_terms]}}",
+          "output": "search-terms.json"
+        },
+        {
+          "title": "[Researcher] \u2014 Execute web harvest",
+          "owner": "[Researcher]",
+          "conditional": "Only if structured KB and web harvesting enabled",
+          "description": "Execute web harvesting using kb-harvest skill or equivalent backend.\n\nProcess:\n1. Read search-terms.json to get target topics and search terms\n2. Select backend: ddg+webfetch (default), websearch+webfetch, webfetch (direct URL), firecrawl (requires API key), or imported\n3. For each topic, execute search and fetch content from top results\n4. Extract structured content using entry schema\n5. Apply quality_threshold from population_strategy (default 0.7)\n6. Add harvested entries with source.backend, source.url, and source.confidence\n7. Update manifest with harvested counts\n\nIf no backend is available (no web access in environment), this task completes with a note that manual content addition is required.\n\nOutput: kb/ web-harvested entries, updated manifests, harvest-log.json",
+          "output": "kb/ web-harvested entries, manifests, harvest-log.json"
         },
         {
           "title": "[Builder] \u2014 Create bridge entries",
@@ -916,7 +951,7 @@
         {
           "title": "[Auditor] \u2014 Validate file paths and schema conformance",
           "owner": "[Auditor]",
-          "description": "Before the gate check, validate:\n\n1. File-path audit: every file referenced in master-index.json and per-layer manifests exists on disk. Report any orphaned references or missing files.\n2. Schema conformance: load entry-schema.json, then validate every KB entry against it. Check ALL required fields, types, and values \u2014 including entry ID format. If entry-schema.json defines an ID pattern (e.g., {kb}_{topic}_{entry-name}), every entry ID must match it. Do not accept ad-hoc ID formats that diverge from the schema.\n3. If bridge layer exists: load bridge-schema.json and validate every bridge entry. Check confidence scores are numeric and in range [0.0, 1.0].\n4. Artifact-manifest audit: verify artifact-manifest.md lists every file produced in this phase. Count files on disk and compare to manifest entry count. Report any untracked files.\n\nProduce a validation-report.md listing: files checked, schema violations found (with entry ID and field), manifest gaps, and a PASS/FAIL summary. This report is evidence for the gate.",
+          "description": "Before the gate check, validate:\n\n1. File-path audit: every file referenced in master-index.json and per-layer manifests exists on disk. Report any orphaned references or missing files.\n2. Schema conformance: load entry-schema.json, then validate every KB entry against it. Check ALL required fields, types, and values \u2014 including entry ID format. If entry-schema.json defines an ID pattern (e.g., {kb}_{topic}_{entry-name}), every entry ID must match it. Do not accept ad-hoc ID formats that diverge from the schema.\n3. If bridge layer exists: load bridge-schema.json and validate every bridge entry. Check confidence scores are numeric and in range [0.0, 1.0].\n4. KB registry validation: if structured KB, verify kb-registry.json exists and contains metadata for all layers. Check that each layer entry has name, path, domain_boundary, authority_score, and topics.\n5. Web harvest validation: if web harvesting was enabled, verify harvest-log.json exists and lists source URLs, backends used, and confidence scores for each harvested entry.\n6. Artifact-manifest audit: verify artifact-manifest.md lists every file produced in this phase. Count files on disk and compare to manifest entry count. Report any untracked files.\n\nProduce a validation-report.md listing: files checked, schema violations found (with entry ID and field), manifest gaps, registry issues, and a PASS/FAIL summary. This report is evidence for the gate.",
           "output": "validation-report.md"
         },
         {
@@ -926,19 +961,21 @@
           "gate_conditions": [
             "KB directory tree exists and matches directory-structure.md specification",
             "All placeholder entries created (one per topic per layer)",
-            "All harvestable research content has been captured in KB entries — zero skipped harvestable items",
+            "All harvestable research content has been captured in KB entries \u2014 zero skipped harvestable items",
             "No KB entry accessible from research documents still has status='placeholder'",
             "Master-index.json and per-layer manifests reflect actual entry counts",
             "If bridge layer: at least one bridge entry per descriptor category",
             "Entry schema validation: every entry conforms to entry-schema.json",
             "Harvested entries have description >100 chars, populated concepts array, and source citations",
+            "If structured KB: kb-registry.json exists with all layer metadata",
+            "If web harvest enabled: harvest-log.json exists with source URLs and confidence scores",
             "Validation report: all file paths resolve and all entries pass schema check",
-            "Artifact-manifest.md tracks every file produced in this phase — no untracked files"
+            "Artifact-manifest.md tracks every file produced in this phase \u2014 no untracked files"
           ],
           "gate_verification": {
             "automated_checks": [
               "[ -d kb/ ] && find kb/ -name '*.json' | wc -l  # verify KB files exist",
-              "grep -r '\"placeholder\"' kb/ --include='*.json' -l | wc -l  # count remaining placeholders — should be zero if all harvestable",
+              "grep -r '\"placeholder\"' kb/ --include='*.json' -l | wc -l  # count remaining placeholders \u2014 should be zero if all harvestable",
               "python3 -c \"import json,sys,glob; files=glob.glob('kb/**/*.json',recursive=True); [json.load(open(f)) for f in files]; print(f'{len(files)} KB files valid JSON')\"",
               "[ -f validation-report.md ]",
               "[ -f kb/master-index.json ]"
@@ -946,25 +983,30 @@
             "verification_script": "For each file in handoff.output_artifacts: verify exists and >0 bytes. Count KB entries with status='harvested' vs 'placeholder'. Report ratio.",
             "minimum_automated_ratio": 0.5
           },
-          "stakeholder_question": "Review the harvested KB entries — do the knowledge categories match what you expected? Are there knowledge types from the domain that weren't captured?",
+          "stakeholder_question": "Review the harvested KB entries \u2014 do the knowledge categories match what you expected? Are there knowledge types from the domain that weren't captured?",
           "guardrail_checks": [
-            "KB complexity level matches complexity_profile.knowledge dimension from Phase 0 — if flat domain has bridged KB design, or bridged domain has flat KB, confirm with [Stakeholder] before proceeding"
+            "KB complexity level matches complexity_profile.knowledge dimension from Phase 0 \u2014 if flat domain has bridged KB design, or bridged domain has flat KB, confirm with [Stakeholder] before proceeding"
           ],
           "blocker_examples": [
-            "Directory tree created but no placeholder entries — KB is empty shell, not bootstrapped",
-            "Research documents contain 20 harvestable items but only 5 were captured — incomplete harvest",
-            "KB entries still at 'placeholder' status when research documents contain mappable content — harvesting was skipped",
-            "Bridge entries created but with no confidence scores — doesn't conform to bridge-schema.json"
+            "Directory tree created but no placeholder entries \u2014 KB is empty shell, not bootstrapped",
+            "Research documents contain 20 harvestable items but only 5 were captured \u2014 incomplete harvest",
+            "KB entries still at 'placeholder' status when research documents contain mappable content \u2014 harvesting was skipped",
+            "Bridge entries created but with no confidence scores \u2014 doesn't conform to bridge-schema.json",
+            "kb-registry.json missing for structured KB \u2014 agents won't be able to query across layers",
+            "Web harvest enabled but no harvest-log.json \u2014 cannot verify source provenance"
           ],
           "handoff": {
             "output_artifacts": [
               "kb/ (full directory tree with entries)",
               "kb/master-index.json",
               "kb/*/manifest.json",
+              "kb-registry.json (if structured KB)",
+              "harvest-log.json (if web harvest enabled)",
               "validation-report.md"
             ],
             "next_phase_context": [
               "kb-architecture.md (summary \u2014 layer names and boundaries only)",
+              "kb-registry.json (if structured KB)",
               "research/requirements.md",
               "research/cross-cutting-concerns.md",
               "scope.md",
@@ -980,7 +1022,7 @@
               "total_entries": null,
               "harvested": null,
               "placeholder": null,
-              "_note": "Populate these values during execution — null means 'not yet measured'"
+              "_note": "Populate these values during execution \u2014 null means 'not yet measured'"
             },
             "skill_validation": "none"
           }
@@ -1520,7 +1562,7 @@
         {
           "title": "[Architect] \u2014 Define phase-to-KB-layer mapping",
           "owner": "[Architect]",
-          "description": "For each phase in the output playbook: which KB layers are relevant. No phase loads the entire KB \u2014 only the layers it needs. Must be consistent with KB layer definitions from Phase 2.",
+          "description": "For each phase in the output playbook: which KB layers are relevant. No phase loads the entire KB \u2014 only the layers it needs. Must be consistent with KB layer definitions from Phase 2.\n\nIf structured KB with kb-registry.json: reference layers by name from the registry. The registry provides authority scores for ranking query results. Document any cross-layer queries that need weighted result merging.\n\nOutput: output-config.md with phase_kb_mapping referencing registry layer names.",
           "output": "output-config.md"
         },
         {
@@ -1808,14 +1850,14 @@
           "expected_lines": "400-1500 lines depending on domain complexity",
           "timeout_risk": "Write tool has ~60 second timeout for large content",
           "chunking_strategy": "Write structure first (title through roles), then use Edit to append sections. Never write >500 lines in single Write call.",
-          "estimation_formula": "200 + (phases × 50) + (CCCs × 15) + (FMs × 10) + (metrics × 10) + 100"
+          "estimation_formula": "200 + (phases \u00d7 50) + (CCCs \u00d7 15) + (FMs \u00d7 10) + (metrics \u00d7 10) + 100"
         }
       },
       "items": [
         {
           "title": "[Builder] \u2014 Estimate JSON size",
           "owner": "[Builder]",
-          "description": "Calculate estimated line count before writing to determine if chunked writing is required.\n\nESTIMATION FORMULA:\n- Base structure: ~200 lines (title, version, description, workflow_model, defaults, roles, scope)\n- Each phase (checklist): ~50 lines (title, purpose, compilation, items, gate)\n- Cross-cutting concerns: ~15 lines each\n- Failure modes: ~10 lines each\n- Metrics: ~10 lines each\n- Usage instructions: ~50 lines\n\nTotal = 200 + (phases × 50) + (CCCs × 15) + (FMs × 10) + (metrics × 10) + 100\n\nIf estimated total > 500 lines, use chunked writing strategy.\n\nOutput: One line in size-estimate.md: 'estimated_lines: N'",
+          "description": "Calculate estimated line count before writing to determine if chunked writing is required.\n\nESTIMATION FORMULA:\n- Base structure: ~200 lines (title, version, description, workflow_model, defaults, roles, scope)\n- Each phase (checklist): ~50 lines (title, purpose, compilation, items, gate)\n- Cross-cutting concerns: ~15 lines each\n- Failure modes: ~10 lines each\n- Metrics: ~10 lines each\n- Usage instructions: ~50 lines\n\nTotal = 200 + (phases \u00d7 50) + (CCCs \u00d7 15) + (FMs \u00d7 10) + (metrics \u00d7 10) + 100\n\nIf estimated total > 500 lines, use chunked writing strategy.\n\nOutput: One line in size-estimate.md: 'estimated_lines: N'",
           "output": "size-estimate.md"
         },
         {
@@ -1877,9 +1919,9 @@
           },
           "stakeholder_question": "The assembled playbook has N phases and M total tasks. Does this match your expectations for this domain's complexity?",
           "blocker_examples": [
-            "JSON has trailing comma after last array element — parser rejects it, fix syntax",
-            "Missing required top-level field — check the 16-field checklist",
-            "Automated JSON parse check fails — fix syntax errors before proceeding"
+            "JSON has trailing comma after last array element \u2014 parser rejects it, fix syntax",
+            "Missing required top-level field \u2014 check the 16-field checklist",
+            "Automated JSON parse check fails \u2014 fix syntax errors before proceeding"
           ],
           "handoff": {
             "output_artifacts": [
@@ -2280,7 +2322,7 @@
             "Edge cases and friction documented",
             "All CRITICAL, HIGH, and MEDIUM issues fixed",
             "JSON re-validated after fixes",
-            "[Auditor] verification passed — no regressions",
+            "[Auditor] verification passed \u2014 no regressions",
             "Dry-run fidelity: at least one phase has a mock output demonstrating the playbook is executable"
           ],
           "gate_verification": {
@@ -2297,12 +2339,12 @@
             "verification_script": "Verify all 7 output artifacts exist with >0 bytes. Parse playbook-v0.2.json. Count Y/N entries in walkthroughs.",
             "minimum_automated_ratio": 0.5
           },
-          "stakeholder_question": "Review the friction log — which items would block a first-time user? Should any be promoted to must-fix before release?",
+          "stakeholder_question": "Review the friction log \u2014 which items would block a first-time user? Should any be promoted to must-fix before release?",
           "blocker_examples": [
             "Scenario walkthrough reveals unresolvable ambiguity in a task",
-            "Handoff chain broken — phase N+1 needs file that phase N doesn't produce",
+            "Handoff chain broken \u2014 phase N+1 needs file that phase N doesn't produce",
             "CRITICAL issue found that requires architectural change (escalate to Stakeholder)",
-            "Automated file-existence checks fail for testing/ deliverables — complete the walkthroughs before advancing"
+            "Automated file-existence checks fail for testing/ deliverables \u2014 complete the walkthroughs before advancing"
           ],
           "handoff": {
             "output_artifacts": [
@@ -2578,9 +2620,9 @@
           },
           "stakeholder_question": "Does the quick-start guide make sense to someone who wasn't involved in building this playbook? Would you hand this to a colleague and expect them to succeed?",
           "blocker_examples": [
-            "Changelog missing version history — document all versions",
-            "Quick-start guide missing prerequisites — add before finalizing",
-            "Automated file-existence checks fail for final/ deliverables — create missing files before closing"
+            "Changelog missing version history \u2014 document all versions",
+            "Quick-start guide missing prerequisites \u2014 add before finalizing",
+            "Automated file-existence checks fail for final/ deliverables \u2014 create missing files before closing"
           ],
           "handoff": {
             "output_artifacts": [
@@ -3107,8 +3149,8 @@
     },
     {
       "id": "FM-027",
-      "symptom": "Context overflow occurs mid-run without warning. Post-overflow quality degrades — agent stops referencing specific research content and produces generic claims.",
-      "root_cause": "No context budget estimation during Phase 0. Session breaks not planned around overflow risk. The design-to-assembly transition (Phase 8→9) is the highest-risk overflow point.",
+      "symptom": "Context overflow occurs mid-run without warning. Post-overflow quality degrades \u2014 agent stops referencing specific research content and produces generic claims.",
+      "root_cause": "No context budget estimation during Phase 0. Session breaks not planned around overflow risk. The design-to-assembly transition (Phase 8\u21929) is the highest-risk overflow point.",
       "fix": "Estimate context budget in Phase 0. If estimated total exceeds model window, plan mandatory fresh session at Phase 8/9 boundary with explicit state serialization.",
       "prevention": "Phase 0 context budget estimation task (added in v5). Session breaks aligned to phase gates. decisions-ledger.md updated before every session break.",
       "phase": "Phase 0: Commission & Scoping",
@@ -3118,7 +3160,7 @@
     {
       "id": "FM-028",
       "symptom": "Agent self-assesses gate conditions as PASS when deliverables don't exist. 4+ phases false-passed in trial-2.",
-      "root_cause": "No automated verification — agent is both producer and verifier. Self-assessment bias: the agent that did the work assumes it succeeded.",
+      "root_cause": "No automated verification \u2014 agent is both producer and verifier. Self-assessment bias: the agent that did the work assumes it succeeded.",
       "fix": "Add gate_verification blocks with automated file-existence and JSON-parse checks. Require minimum_automated_ratio of 0.5.",
       "prevention": "CCC-08 (Automated Gate Verification) enforces automated checks at 50%+ of gate conditions. gate_verification blocks added to critical phases.",
       "phase": "All phases with gates",
@@ -3134,6 +3176,26 @@
       "phase": "Phase 3: KB Bootstrapping",
       "severity": "error",
       "source": "pbcpb-trial-2-audit-2026-04"
+    },
+    {
+      "id": "FM-030",
+      "symptom": "Web harvest task fails or produces no results despite valid search terms",
+      "root_cause": "Selected backend is unavailable in execution environment (e.g., firecrawl requires API key, web access blocked)",
+      "fix": "Fall back to next available backend. If no backends work, mark search terms as pending and proceed with research-only harvest. Document in harvest-log.json that web harvest was attempted but failed.",
+      "prevention": "Phase 2 should specify backend fallback order. Phase 3 harvest task should check backend availability before attempting web harvest.",
+      "phase": "Phase 3: KB Bootstrapping",
+      "severity": "degraded",
+      "source": "kb-harvest-integration"
+    },
+    {
+      "id": "FM-031",
+      "symptom": "KB registry references layers that don't exist, or KB layers exist but aren't in registry",
+      "root_cause": "kb-registry.json created during bootstrapping but not updated when layers were added/removed, or manual edits to KB without registry update",
+      "fix": "Re-run Phase 3 Register KB layers task to sync registry with actual directory structure. Validate registry against master-index.json.",
+      "prevention": "Phase 3 gate checks kb-registry.json exists and contains all layers. Any KB modification must update registry.",
+      "phase": "Phase 3: KB Bootstrapping",
+      "severity": "error",
+      "source": "kb-registry-sync"
     }
   ],
   "phase_kb_mapping": {

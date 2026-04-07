@@ -182,8 +182,33 @@
             "harvesting_sources": { "type": "array", "items": { "type": "string" } },
             "curation_rules": { "type": "string" },
             "sync_rules": { "type": "string" },
-            "versioning_protocol": { "type": "string" }
+            "versioning_protocol": { "type": "string" },
+            "backends": {
+              "type": "array",
+              "description": "Available backends for web harvesting: ddg+webfetch, websearch+webfetch, webfetch, firecrawl, imported",
+              "items": { "type": "string" }
+            },
+            "domain_rankings": {
+              "type": "object",
+              "description": "Domain to priority score mapping (higher = more authoritative)",
+              "additionalProperties": { "type": "number" }
+            },
+            "quality_threshold": {
+              "type": "number",
+              "description": "Minimum confidence score for harvested entries (0.0-1.0)",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "max_urls_per_session": {
+              "type": "integer",
+              "description": "Maximum URLs to harvest per session",
+              "minimum": 1
+            }
           }
+        },
+        "kb_registry": {
+          "type": "string",
+          "description": "Path to KB registry file (relative to home directory)"
         },
         "directory_structure": { "type": "string" }
       }
@@ -370,9 +395,9 @@
                     "kb_status": {
                       "type": "object",
                       "properties": {
-                        "total_entries": { "type": "integer", "minimum": 0 },
-                        "harvested": { "type": "integer", "minimum": 0 },
-                        "placeholder": { "type": "integer", "minimum": 0 }
+                        "total_entries": { "type": ["integer", "null"], "minimum": 0 },
+                        "harvested": { "type": ["integer", "null"], "minimum": 0 },
+                        "placeholder": { "type": ["integer", "null"], "minimum": 0 }
                       }
                     }
                   }

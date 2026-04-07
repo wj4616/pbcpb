@@ -517,8 +517,8 @@ def validate(path: str, schema_path: str = None) -> Tuple[List[str], List[str]]:
                             errors.append(f"{item_label}: kb_status must be an object")
                         else:
                             for field in ("total_entries", "harvested", "placeholder"):
-                                if field in ks and not isinstance(ks[field], int):
-                                    errors.append(f"{item_label}: kb_status.{field} must be an integer")
+                                if field in ks and not isinstance(ks[field], (int, type(None))):
+                                    errors.append(f"{item_label}: kb_status.{field} must be an integer or null")
 
         if not has_gate and i < len(checklists) - 1:
             errors.append(f"{phase_label}: no gate task found")
