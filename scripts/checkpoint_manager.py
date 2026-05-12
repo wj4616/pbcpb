@@ -18,6 +18,12 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+import tracing  # noqa: F401 — initialise Langfuse before decorators fire
+from tracing import RunTrace
+from langfuse import observe, get_client
+
+RunTrace.attach("/home/myuser/.openclaw/workspace-pb-coordinator")
+
 CHARS_PER_TOKEN = 4
 
 
@@ -117,6 +123,36 @@ def list_checkpoints(checkpoint_dir: Path) -> list[dict]:
     return checkpoints
 
 
+@observe(name="checkpoint-save", capture_input=False, capture_output=False)
+def _traced_save(phase: int, artifact_files: list[str], checkpoint_dir: Path) -> Path:
+    """Save checkpoint with tracing."""
+    _lf = get_client()
+    artifacts = {}
+    for f in artifact_files:
+        p = Path(f)
+        if p.exists():
+            artifacts[p.name] = p.read_text()
+    _lf.update_current_span(input={"phase": phase, "artifact_count": len(artifacts)})
+    path = save_checkpoint(phase, artifacts, checkpoint_dir)
+    _lf.update_current_span(output={"checkpoint_path": str(path)})
+    return path
+
+
+@observe(name="checkpoint-verify", capture_input=False, capture_output=False)
+def _traced_verify(phase: int, artifact_files: list[str], checkpoint_dir: Path) -> tuple[bool, list]:
+    """Verify checkpoint with tracing."""
+    _lf = get_client()
+    artifacts = {}
+    for f in artifact_files:
+        p = Path(f)
+        if p.exists():
+            artifacts[p.name] = p.read_text()
+    _lf.update_current_span(input={"phase": phase, "artifact_count": len(artifacts)})
+    passed, mismatches = verify_checkpoint(phase, artifacts, checkpoint_dir)
+    _lf.update_current_span(output={"passed": passed, "mismatch_count": len(mismatches)})
+    return passed, mismatches
+
+
 def main():
     parser = argparse.ArgumentParser(description="Manage phase checkpoints")
     parser.add_argument("command", choices=["save", "verify", "list", "get"])
@@ -126,28 +162,20 @@ def main():
 
     args = parser.parse_args()
 
+    trace_id = RunTrace.current_trace_id()
+
     if args.command == "save":
         if not args.artifacts:
             print("Error: --artifacts required for save")
             return
-        artifacts = {}
-        for f in args.artifacts:
-            p = Path(f)
-            if p.exists():
-                artifacts[p.name] = p.read_text()
-        path = save_checkpoint(args.phase, artifacts, args.dir)
+        path = _traced_save(args.phase, args.artifacts, args.dir, langfuse_trace_id=trace_id)
         print(f"Checkpoint saved: {path}")
 
     elif args.command == "verify":
         if not args.artifacts:
             print("Error: --artifacts required for verify")
             return
-        artifacts = {}
-        for f in args.artifacts:
-            p = Path(f)
-            if p.exists():
-                artifacts[p.name] = p.read_text()
-        passed, mismatches = verify_checkpoint(args.phase, artifacts, args.dir)
+        passed, mismatches = _traced_verify(args.phase, args.artifacts, args.dir, langfuse_trace_id=trace_id)
         if passed:
             print("PASS: All artifacts match checkpoint")
         else:

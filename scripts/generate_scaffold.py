@@ -17,7 +17,15 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import tracing  # noqa: F401 — initialise Langfuse before decorators fire
+from tracing import RunTrace
+from langfuse import observe, get_client
 
+RunTrace.attach("/home/myuser/.openclaw/workspace-pb-coordinator")
+
+
+@observe(name="generate-scaffold", capture_input=False, capture_output=False)
 def generate_scaffold(
     title: str = "My Playbook",
     num_phases: int = 5,
@@ -25,6 +33,8 @@ def generate_scaffold(
     workflow_model: str = "role-based-single-agent",
 ) -> dict:
     """Generate a scaffold playbook with all required fields."""
+    _lf = get_client()
+    _lf.update_current_span(input={"title": title, "num_phases": num_phases, "num_roles": num_roles, "workflow_model": workflow_model})
 
     # Default role names based on count
     default_role_names = [
@@ -255,6 +265,7 @@ def generate_scaffold(
         },
     }
 
+    _lf.update_current_span(output={"phases": num_phases, "roles": num_roles})
     return playbook
 
 
@@ -315,6 +326,7 @@ def main():
         num_phases=args.phases,
         num_roles=min(args.roles, 6),
         workflow_model=args.workflow,
+        langfuse_trace_id=RunTrace.current_trace_id(),
     )
 
     output_path.write_text(json.dumps(playbook, indent=2) + "\n")

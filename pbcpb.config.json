@@ -1,0 +1,56 @@
+{
+  "_comment": "PBCPB Unified Configuration. Override path via PBCPB_CONFIG_PATH env var.",
+  "kb_adapter": {
+    "adapter_type": "JSON_DB",
+    "_adapter_type_options": ["RAG_MCP", "MARKDOWN_FOLDER", "JSON_DB", "CUSTOM_API"],
+    "connection": {
+      "kb_root": "./kb",
+      "_comment": "JSON_DB: kb_root required. Set to path of your KB directory.",
+      "_rag_mcp_example": {
+        "mcp_tool_name": "mcp__dify-cognitive-kb__cognitive-research-kb-dify",
+        "dataset_name": "pbcpb-kb",
+        "timeout": 60
+      },
+      "_markdown_folder_example": {
+        "folder_path": "./kb-markdown",
+        "timeout": 60
+      },
+      "_custom_api_example": {
+        "base_url": "https://your-api.example.com/kb",
+        "query_path": "/query",
+        "populate_path": "/populate",
+        "scan_gaps_path": "/scan_gaps",
+        "api_key": null,
+        "api_key_header": "X-API-Key",
+        "timeout": 60
+      }
+    },
+    "skill_ref": null,
+    "_skill_ref_note": "Required for MARKDOWN_FOLDER adapter. Path or name of skill.",
+    "bootstrap_tier_limit": 1,
+    "bootstrap_tier_zero_threshold": 0
+  },
+  "role_system": {
+    "syntax_mode": "@name",
+    "_syntax_mode_options": ["@name", "custom"],
+    "syntax_pattern": "@{name}",
+    "roles": [
+      {
+        "placeholder_name": "@coordinator",
+        "role_type": "HUMAN",
+        "linked_agent": null,
+        "_note": "null linked_agent is valid — human executes manually"
+      },
+      {
+        "placeholder_name": "@builder",
+        "role_type": "AI_ASSISTED",
+        "linked_agent": null
+      },
+      {
+        "placeholder_name": "@auditor",
+        "role_type": "HUMAN",
+        "linked_agent": null
+      }
+    ]
+  }
+}

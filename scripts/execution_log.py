@@ -6,6 +6,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+import tracing  # noqa: F401 — initialise Langfuse before decorators fire
+from tracing import RunTrace
+from langfuse import observe, get_client
+
+RunTrace.attach("/home/myuser/.openclaw/workspace-pb-coordinator")
+
 
 def create_execution_log(
     playbook_path: str,
@@ -87,6 +93,35 @@ def get_latest_execution_log(directory: Path) -> Optional[Path]:
     if not logs:
         return None
     return max(logs, key=lambda p: p.stat().st_mtime)
+
+
+@observe(name="write-execution-log", capture_input=False, capture_output=False)
+def _traced_write_log(
+    playbook_path: str,
+    status: str,
+    phases_completed: int,
+    duration_seconds: int,
+    output_dir: Path,
+    **kwargs,
+) -> Path:
+    """Create and write execution log with tracing."""
+    _lf = get_client()
+    _lf.update_current_span(input={
+        "playbook": playbook_path,
+        "status": status,
+        "phases_completed": phases_completed,
+        "duration_seconds": duration_seconds,
+    })
+    log = create_execution_log(
+        playbook_path=playbook_path,
+        status=status,
+        phases_completed=phases_completed,
+        duration_seconds=duration_seconds,
+        **kwargs,
+    )
+    log_path = write_execution_log(log, output_dir=output_dir)
+    _lf.update_current_span(output={"log_path": str(log_path), "run_id": log.get("run_id")})
+    return log_path
 
 
 def main():

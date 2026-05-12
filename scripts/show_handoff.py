@@ -16,6 +16,13 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+import tracing  # noqa: F401 — initialise Langfuse before decorators fire
+from tracing import RunTrace
+from langfuse import observe, get_client
+
+RunTrace.attach("/home/myuser/.openclaw/workspace-pb-coordinator")
+
 
 def get_phase_handoff(playbook: dict, phase_num: int) -> dict | None:
     """Extract handoff info from a phase's gate item."""
@@ -126,6 +133,18 @@ def print_all_handoffs(playbook: dict):
         print()
 
 
+@observe(name="show-handoff", capture_input=False, capture_output=False)
+def _run_show_handoff(playbook_path: str, phase: int | None, show_all: bool) -> None:
+    _lf = get_client()
+    _lf.update_current_span(input={"playbook": playbook_path, "phase": phase, "all": show_all})
+    playbook = json.loads(Path(playbook_path).read_text())
+    if show_all:
+        print_all_handoffs(playbook)
+    else:
+        print_handoff(playbook, phase)
+    _lf.update_current_span(output={"done": True})
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Show handoff information for playbook phases.",
@@ -163,12 +182,7 @@ def main():
         print(f"File not found: {args.playbook}")
         sys.exit(1)
 
-    playbook = json.loads(path.read_text())
-
-    if args.all:
-        print_all_handoffs(playbook)
-    else:
-        print_handoff(playbook, args.phase)
+    _run_show_handoff(str(path), args.phase, args.all, langfuse_trace_id=RunTrace.current_trace_id())
 
 
 if __name__ == "__main__":

@@ -15,9 +15,13 @@ Assembles system prompts from playbook components:
 """
 
 from typing import Any
+
+from langfuse import observe, get_client
+
 from .constants import CHARS_PER_TOKEN
 
 
+@observe(name="generate-system-prompt", capture_input=False, capture_output=False)
 def generate_system_prompt(
     playbook: dict[str, Any],
     phase: dict[str, Any],
@@ -47,6 +51,8 @@ def generate_system_prompt(
             "handoff_requirements": True,
         }
 
+    _lf = get_client()
+
     compilation = phase.get("compilation", {})
     role_mindset = compilation.get("role_mindset", "Coordinator")
 
@@ -57,6 +63,12 @@ def generate_system_prompt(
     else:
         role_name = role_mindset.strip()
         mindset_text = ""
+
+    _lf.update_current_span(input={
+        "role": role_name,
+        "phase_objective": (compilation.get("objective") or "")[:200],
+        "context_file_count": len(loaded_files),
+    })
 
     # Get role definition
     roles = playbook.get("roles", {})
@@ -216,7 +228,9 @@ def generate_system_prompt(
                     break
         sections.append("")
 
-    return "\n".join(sections)
+    prompt = "\n".join(sections)
+    _lf.update_current_span(output={"token_estimate": estimate_prompt_tokens(prompt)})
+    return prompt
 
 
 def _parse_artifact_manifest(loaded_files: dict[str, str]) -> dict[str, str]:

@@ -15,6 +15,12 @@ import sys
 from pathlib import Path
 from typing import Tuple, List
 
+import tracing  # noqa: F401 — initialise Langfuse before decorators fire
+from tracing import RunTrace
+from langfuse import observe, get_client
+
+RunTrace.attach("/home/myuser/.openclaw/workspace-pb-coordinator")
+
 
 def extract_role_name(role_mindset: str) -> str:
     """
@@ -99,6 +105,17 @@ def validate_semantic(playbook: dict) -> Tuple[List[str], List[str]]:
     return errors, warnings
 
 
+@observe(name="validate-semantic", capture_input=False, capture_output=False)
+def _run_validate_semantic(path: str) -> tuple[list, list]:
+    """Run semantic validation and record span with result summary."""
+    _lf = get_client()
+    _lf.update_current_span(input={"playbook": path})
+    playbook = json.loads(Path(path).read_text())
+    errors, warnings = validate_semantic(playbook)
+    _lf.update_current_span(output={"errors": len(errors), "warnings": len(warnings), "passed": len(errors) == 0})
+    return errors, warnings
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Validate semantic consistency of a playbook JSON file.",
@@ -119,8 +136,7 @@ def main():
         print(f"File not found: {path}")
         sys.exit(1)
 
-    playbook = json.loads(Path(path).read_text())
-    errors, warnings = validate_semantic(playbook)
+    errors, warnings = _run_validate_semantic(path, langfuse_trace_id=RunTrace.current_trace_id())
 
     if errors:
         print(f"FAIL: {len(errors)} error(s), {len(warnings)} warning(s)")

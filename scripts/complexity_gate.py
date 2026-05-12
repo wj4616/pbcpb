@@ -15,6 +15,12 @@ import sys
 from pathlib import Path
 from typing import Tuple, List
 
+import tracing  # noqa: F401 — initialise Langfuse before decorators fire
+from tracing import RunTrace
+from langfuse import observe, get_client
+
+RunTrace.attach("/home/myuser/.openclaw/workspace-pb-coordinator")
+
 # Import from compilation module (add scripts to path)
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).parent))
@@ -142,6 +148,26 @@ def verify_complexity_match(playbook: dict) -> Tuple[bool, List[str]]:
     return len(issues) == 0, issues
 
 
+@observe(name="complexity-classify", capture_input=False, capture_output=False)
+def _run_classify(playbook_path: str) -> dict:
+    _lf = get_client()
+    _lf.update_current_span(input={"playbook": playbook_path})
+    playbook = json.loads(Path(playbook_path).read_text())
+    result = classify_complexity(playbook)
+    _lf.update_current_span(output=result)
+    return result
+
+
+@observe(name="complexity-verify", capture_input=False, capture_output=False)
+def _run_verify(playbook_path: str) -> tuple[bool, list]:
+    _lf = get_client()
+    _lf.update_current_span(input={"playbook": playbook_path})
+    playbook = json.loads(Path(playbook_path).read_text())
+    passed, issues = verify_complexity_match(playbook)
+    _lf.update_current_span(output={"passed": passed, "issue_count": len(issues)})
+    return passed, issues
+
+
 def main():
     parser = argparse.ArgumentParser(description="Complexity gate verification")
     parser.add_argument("command", choices=["classify", "verify"], help="Operation")
@@ -149,15 +175,15 @@ def main():
 
     args = parser.parse_args()
 
-    playbook = json.loads(args.playbook.read_text())
+    trace_id = RunTrace.current_trace_id()
 
     if args.command == "classify":
-        result = classify_complexity(playbook)
+        result = _run_classify(str(args.playbook), langfuse_trace_id=trace_id)
         print(json.dumps(result, indent=2))
         sys.exit(0)
 
     elif args.command == "verify":
-        passed, issues = verify_complexity_match(playbook)
+        passed, issues = _run_verify(str(args.playbook), langfuse_trace_id=trace_id)
         if passed:
             print("PASS: Complexity matches profile")
             sys.exit(0)

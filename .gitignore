@@ -43,3 +43,6 @@ Thumbs.db
 # Project-specific
 *.backup.*
 backups/
+
+# Secrets
+.env

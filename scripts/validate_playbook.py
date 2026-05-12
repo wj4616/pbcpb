@@ -20,8 +20,17 @@ import sys
 from pathlib import Path
 from typing import Tuple, List
 
-# Add scripts path for compilation module imports
+# Ensure project root is on sys.path so 'tracing' module is importable.
+sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add scripts path for compilation module imports.
 sys.path.insert(0, str(Path(__file__).parent))
+
+import tracing  # noqa: F401 — initialise Langfuse before decorators fire
+from tracing import RunTrace
+from langfuse import observe, get_client
+
+RunTrace.attach("/home/myuser/.openclaw/workspace-pb-coordinator")
+
 from compilation.context_budget import estimate_context_tokens, estimate_critical_tokens
 
 REQUIRED_TOP_LEVEL = [
@@ -774,6 +783,16 @@ def validate(path: str, schema_path: str = None) -> Tuple[List[str], List[str]]:
     return errors, warnings
 
 
+@observe(name="validate-playbook", capture_input=False, capture_output=False)
+def _run_validate(path: str, schema_path: str | None) -> tuple[list, list]:
+    """Run validation and record span with result summary."""
+    _lf = get_client()
+    _lf.update_current_span(input={"playbook": path, "schema": schema_path})
+    errors, warnings = validate(path, schema_path=schema_path)
+    _lf.update_current_span(output={"errors": len(errors), "warnings": len(warnings), "passed": len(errors) == 0})
+    return errors, warnings
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Validate a playbook JSON file for structural correctness.",
@@ -800,7 +819,7 @@ def main():
         print(f"File not found: {path}")
         sys.exit(1)
 
-    errors, warnings = validate(path, schema_path=args.schema)
+    errors, warnings = _run_validate(path, args.schema, langfuse_trace_id=RunTrace.current_trace_id())
 
     if errors:
         print(f"FAIL: {len(errors)} error(s), {len(warnings)} warning(s)")
